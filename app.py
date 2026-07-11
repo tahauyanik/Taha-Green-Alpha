@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 
+# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
 st.set_page_config(page_title="Taha Uyanık | Green Alpha", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -80,43 +81,47 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
-@st.cache_data(ttl=3600) # Veriyi 1 saat hafızada tutar, Yahoo Finance engellemez!
+# SUNUCUYU YORMAMAK İÇİN CACHE ZIRHI (HAFIZA)
+@st.cache_data(ttl=3600) 
 def veri_indir(hisseler, periyot):
-    # threads=False ile RAM taşması engellenir
-    return yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
+    # interval="1d" zorunlu kılındı. Saatlik verinin sistemi çökertmesi engellendi!
+    df = yf.download(hisseler, period=periyot, interval="1d", progress=False, threads=False)['Close']
+    # HAYALET PROTOKOLÜ 1: Zaman dilimi (Timezone) formatı silinerek Streamlit'in kafasının karışması engellendi.
+    df.index = pd.to_datetime(df.index).tz_localize(None)
+    return df
 
 try:
     with st.spinner('Kuantum algoritmaları piyasa verilerini tarıyor...'):
         veri = veri_indir(hisseler, periyot)
     
-    # Veri Boşsa Güvenli Durdurma (Çökmeyi engeller)
     if veri.empty or len(veri) < 2:
         st.error("Şu an piyasadan yeterli veri akışı sağlanamıyor. Lütfen farklı bir zaman aralığı seçin.")
         st.stop()
         
-    veri = veri.ffill().bfill() # Kırık çizgileri tamir et
+    veri = veri.ffill().bfill() 
     
-    # 0'a bölme hatasını engellemek için güvenlik filtresi (Infinity çöküşünü önler)
     ilk_degerler = veri.iloc[0].copy()
     ilk_degerler[ilk_degerler == 0] = 0.0001 
     
     normalize_veri = (veri / ilk_degerler) * 100
-    
-    # Plotly'nin çökmesini engellemek için sonsuzluk değerlerini temizle
-    normalize_veri = normalize_veri.replace([np.inf, -np.inf], np.nan).ffill()
+    normalize_veri = normalize_veri.replace([np.inf, -np.inf], np.nan).ffill().fillna(100)
     
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
 
     fig = go.Figure()
+
+    # HAYALET PROTOKOLÜ 2: Tarihler sisteme 'Yazı (Metin)' olarak gönderiliyor. Motor çökmüyor!
+    guvenli_tarihler = normalize_veri.index.strftime('%Y-%m-%d').tolist()
+
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index, y=normalize_veri['TAHA_YESIL_FON'], mode='lines',
+        x=guvenli_tarihler, y=normalize_veri['TAHA_YESIL_FON'], mode='lines',
         name='Taha Yeşil Fon', line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index, y=normalize_veri['XU100.IS'], mode='lines',
+        x=guvenli_tarihler, y=normalize_veri['XU100.IS'], mode='lines',
         name='BIST100', line=dict(color='#B0C4DE', width=2.5), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
     ))
@@ -147,14 +152,14 @@ try:
     if len(getiriler) > 2:
         portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
         
-        # 1mo seçildiğinde 252 günlük yıllıklandırma hata verir, bu yüzden dinamik çarpan koyduk.
+        # 1mo seçildiğinde 252 günlük yıllıklandırma hata verir, dinamik çarpan koyduk.
         islem_gunu = len(getiriler)
         yillik_carpan = 252 if islem_gunu > 21 else islem_gunu
         
         bist_vol = float(getiriler['XU100.IS'].std() * (yillik_carpan ** 0.5) * 100)
         fon_vol = float(portfoy_getiri.std() * (yillik_carpan ** 0.5) * 100)
 
-        # NaN Kontrolü (Streamlit önyüzünü çökertmesin diye)
+        # NaN Kontrolü
         if np.isnan(bist_vol): bist_vol = 0.0
         if np.isnan(fon_vol): fon_vol = 0.0
 
@@ -168,8 +173,7 @@ try:
         r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}", delta="Agresif Büyüme Riski", delta_color="off")
         r_col3.metric("Maksimum Düşüş (Max Drawdown)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
     else:
-        st.warning("Seçilen periyotta risk metriklerini (Volatilite) hesaplayacak kadar işlem günü verisi yok.")
+        st.warning("Seçilen periyotta risk metriklerini hesaplayacak kadar işlem günü verisi yok.")
 
 except Exception as e:
-    # Eğer her şeye rağmen bir hata olursa sistem çökmez, bu zırh devreye girer.
-    st.error("Yahoo Finance veri bağlantısı şu an kurulamıyor veya sistem güvenlik moduna geçti.")
+    st.error("Kritik Sunucu Hatası Engellendi. Yahoo Finance bağlantısı geçici olarak kurulamadı.")
