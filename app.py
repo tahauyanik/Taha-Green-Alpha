@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
 
-# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU (Kusursuz Jilet UI)
+# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU (V2.3 Kusursuz Jilet UI)
 st.set_page_config(page_title="Taha Uyanık Green Tech Fund", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -25,8 +25,12 @@ footer {visibility: hidden;}
 }
 
 /* ---------------------------------------------------
-   KUSURSUZ SELECTBOX (BEYAZ KUTU İMHASI)
+   KUSURSUZ SELECTBOX (BEYAZ KUTU İMHASI - SIFIR TOLERANS)
 --------------------------------------------------- */
+/* Sadece selectbox değil, etrafındaki her div'i eziyoruz */
+div[data-baseweb="select"] {
+    background-color: #161A22 !important;
+}
 div[data-baseweb="select"] > div {
     background-color: #161A22 !important;
     color: #F5F5F5 !important;
@@ -36,7 +40,8 @@ div[data-baseweb="select"] > div {
 div[data-baseweb="select"] svg {
     color: #DEFF9A !important; 
 }
-div[role="listbox"] {
+/* Açılır menü listesi */
+div[role="listbox"], ul[role="listbox"] {
     background-color: #161A22 !important;
     border: 1px solid #2D323C !important;
 }
@@ -45,6 +50,7 @@ ul[data-testid="stSelectboxVirtualDropdown"] {
 }
 li[role="option"] {
     color: #F5F5F5 !important;
+    background-color: #161A22 !important;
 }
 li[role="option"]:hover {
     background-color: #2D323C !important;
@@ -92,8 +98,8 @@ st.sidebar.title("⚙️ Kontrol Paneli")
 st.sidebar.markdown("Analiz periyodunu seçin:")
 periyot = st.sidebar.selectbox("Zaman Aralığı", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=2)
 
-st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v2.2")
-st.markdown("BIST100 vs. Gerçek Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi (Ağır Sıklet Sürüm)")
+st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v2.3")
+st.markdown("BIST100 vs. Gerçek Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi (Quant Edition)")
 
 # GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
@@ -168,7 +174,8 @@ fig.update_layout(
     )
 )
 
-st.plotly_chart(fig, use_container_width=True)
+# BUM! O ÇİRKİN ARAÇ ÇUBUĞUNU (MODEBAR) TAMAMEN YOK EDEN KOD BURADA:
+st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 # Finansal Vurgun (Backtest)
 st.subheader("💰 100.000 TL Simülasyon Sonuçları")
