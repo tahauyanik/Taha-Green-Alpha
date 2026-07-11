@@ -13,8 +13,48 @@ st.markdown("""
     background-color: #0E1117;
 }
 
-/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle (Amatör İzleri Silme) */
+/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle */
 #MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Sidebar Arka Planı ve Seçim Kutusu Düzeltmesi */
+[data-testid="stSidebar"] {
+    background-color: #161A22;
+    border-right: 1px solid #2D323C;
+}
+
+/* Sidebar İçindeki Selectbox'ı Koyu Yapma (Beyaz Kutu Sorununu Çözer) */
+div[data-baseweb="select"] > div {
+    background-color: #1E232E !important;
+    color: #F5F5F5 !important;
+    border: 1px solid #2D323C !important;
+}
+div[data-baseweb="select"] * {
+    color: #F5F5F5 !important;
+}
+div[data-baseweb="popover"] ul {
+    background-color: #1E232E !important;
+}
+div[data-baseweb="popover"] li {
+    color: #F5F5F5 !important;
+}
+
+/* Metrik Kutuları (Card Design ve 3D Etki) - EKSİK KUTU GÖRÜNÜMÜNÜ ZORLAMA */
+div[data-testid="metric-container"] {
+    background-color: #161A22 !important;
+    border: 1px solid #DEFF9A !important; /* Neon Yeşil Çerçeve */
+    padding: 20px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 10px rgba(222, 255, 154, 0.05) !important;
+    transition: transform 0.2s ease-in-out !important;
+}
+
+/* Metrik Kutularının Üzerine Gelince Zıplama Efekti */
+div[data-testid="metric-container"]:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 6px 15px rgba(222, 255, 154, 0.15) !important;
+}
 header {visibility: hidden;}
 footer {visibility: hidden;}
 
@@ -79,20 +119,55 @@ normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTO
 # 3. GRAFİK ÇİZİMİ (Estetik Güncelleme - Karanlık Tema)
 st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
 
-# Matplotlib için Karanlık Tema ve Şeffaf Arka Plan Ayarları
-plt.style.use('dark_background')
-fig, ax = plt.subplots(figsize=(10,4))
-fig.patch.set_facecolor('#0E1117')  # Streamlit arka planı ile aynı renk
-ax.set_facecolor('#0E1117')
+import plotly.graph_objects as go
 
-ax.plot(normalize_veri.index, normalize_veri['TAHA_YESIL_FON'], label='Taha Yeşil Fon', color='#DEFF9A', linewidth=3)
-ax.plot(normalize_veri.index, normalize_veri['XU100.IS'], label='BIST100', color='#FFFFFF', linewidth=1.5, alpha=0.5)
+# Grafik Nesnesini Oluşturma (Karanlık Tema ve Neon Renkler)
+fig = go.Figure()
 
-ax.legend(facecolor='#161A22', edgecolor='#DEFF9A')
-ax.grid(color='#2D323C', linestyle='--', linewidth=0.5)
-plt.xticks(rotation=45)
+# Taha Yeşil Fon Çizgisi
+fig.add_trace(go.Scatter(
+    x=normalize_veri.index, 
+    y=normalize_veri['TAHA_YESIL_FON'],
+    mode='lines',
+    name='Taha Yeşil Fon',
+    line=dict(color='#DEFF9A', width=3)
+))
 
-st.pyplot(fig)
+# BIST100 Çizgisi
+fig.add_trace(go.Scatter(
+    x=normalize_veri.index, 
+    y=normalize_veri['XU100.IS'],
+    mode='lines',
+    name='BIST100',
+    line=dict(color='#8892B0', width=2) # Beyaz yerine okunaklı koyu gri/mavi
+))
+
+# Grafiğin Genel Temasını ve Arka Planını Ayarlama
+fig.update_layout(
+    plot_bgcolor='rgba(0,0,0,0)', # İç grafik arka planı şeffaf
+    paper_bgcolor='rgba(0,0,0,0)', # Dış çerçeve arka planı şeffaf
+    font=dict(color='#F5F5F5'),
+    xaxis=dict(
+        showgrid=True, 
+        gridcolor='#2D323C', 
+        tickangle=-45,
+        rangeslider=dict(visible=False) # Alt kısımdaki gereksiz kaydırıcıyı kapatır
+    ),
+    yaxis=dict(
+        showgrid=True, 
+        gridcolor='#2D323C'
+    ),
+    legend=dict(
+        bgcolor='rgba(22, 26, 34, 0.8)',
+        bordercolor='#DEFF9A',
+        borderwidth=1
+    ),
+    margin=dict(l=0, r=0, t=30, b=0),
+    hovermode='x unified' # Mouse ile üzerine gelince her iki değeri aynı anda gösterir
+)
+
+# Plotly Grafiğini Ekrana Basma
+st.plotly_chart(fig, use_container_width=True)
 
 # Finansal Vurgun (Backtest)
 st.subheader("💰 100.000 TL Simülasyon Sonuçları")
