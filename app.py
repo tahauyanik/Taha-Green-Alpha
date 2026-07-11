@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 
+# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
 st.set_page_config(page_title="Taha Uyanık | Green Alpha", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -44,8 +45,10 @@ li[role="option"]:hover {
     color: #DEFF9A !important;
 }
 
-/* METRİK KUTULARI (3D KART ETKİSİ) */
-div[data-testid="metric-container"] {
+/* ---------------------------------------------------
+   V4.0 YENİ METRİK KUTULARI (KAYBOLAN KUTULAR GERİ DÖNDÜ)
+--------------------------------------------------- */
+[data-testid="stMetric"] {
     background-color: #161A22 !important;
     border: 1px solid #DEFF9A !important; 
     padding: 20px !important;
@@ -54,7 +57,7 @@ div[data-testid="metric-container"] {
     transition: all 0.3s ease-in-out !important;
 }
 
-div[data-testid="metric-container"]:hover {
+[data-testid="stMetric"]:hover {
     transform: translateY(-5px) !important;
     box-shadow: 0 8px 20px rgba(222, 255, 154, 0.2) !important;
     border: 1px solid #A3FF00 !important;
@@ -81,7 +84,7 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 def safe_float(val):
-    """Zehirli verileri (NaN/Inf) UI'a gitmeden temizler ve çöküşü (Oh no) engeller."""
+    """Zehirli verileri temizler ve UI çöküşünü engeller."""
     try:
         v = float(val)
         if np.isnan(v) or np.isinf(v): return 0.0
@@ -89,17 +92,13 @@ def safe_float(val):
     except:
         return 0.0
 
-# BUM! SİNSİ DÜŞMAN YOK EDİLDİ: @st.cache_data (Önbellek) TAMAMEN SİLİNDİ!
-# Streamlit 1 aylık veriyi hafızaya alırken kendi kendini patlatıyordu, bu zaafiyeti kaldırdık.
+# ÖNBELLEK (CACHE) SİLİNDİ - YÜKSEK HIZ VE SIFIR ÇÖKÜŞ
 def veri_indir(hisseler, periyot):
     df = yf.download(hisseler, period=periyot, interval="1d", progress=False, threads=False)
-    
-    # Yfinance kütüphanesinin yeni versiyonlarındaki sütun hatasına karşı zırh
     if isinstance(df.columns, pd.MultiIndex):
         df = df['Close']
     elif 'Close' in df.columns:
         df = df['Close']
-        
     if df.index.tz is not None:
         df.index = df.index.tz_localize(None)
     return df
@@ -135,16 +134,18 @@ try:
         name='Taha Yeşil Fon', line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
+    # BIST100'ü biraz daha arkaya ittik (matlaştırdık), senin fonun öne çıkacak!
     fig.add_trace(go.Scatter(
         x=guvenli_tarihler, y=y_bist, mode='lines',
-        name='BIST100', line=dict(color='#B0C4DE', width=2.5), 
+        name='BIST100', line=dict(color='#64748B', width=2), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
     ))
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-        xaxis=dict(showgrid=True, gridcolor='#2D323C', tickangle=-45, rangeslider=dict(visible=False)),
-        yaxis=dict(showgrid=True, gridcolor='#2D323C'),
+        # Izgara çizgilerini (Grid) daha koyu yapıp fonun grafiğini parlattık
+        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45, rangeslider=dict(visible=False)),
+        yaxis=dict(showgrid=True, gridcolor='#1E222A'),
         legend=dict(bgcolor='rgba(22, 26, 34, 0.9)', bordercolor='#DEFF9A', borderwidth=1, orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=0, r=0, t=50, b=0), hovermode='x unified',
         hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#F5F5F5", bordercolor="#DEFF9A")
@@ -159,8 +160,9 @@ try:
     
     fon_buyumesi = safe_float(((yesil_sonuc - 100000) / 100000) * 100)
 
+    # V4.0 - Asimetri Düzeltildi: BIST100'ün altına "Referans Endeks" yazısı eklendi.
     col1, col2, col3 = st.columns(3)
-    col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL")
+    col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL", delta="Referans Endeks", delta_color="off")
     col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL", delta=f"{fon_buyumesi:.1f}% Fon Büyümesi")
     col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"{fark:+,.0f} TL", delta="Piyasayı Yendi" if fark > 0 else "- Piyasaya Yenildi")
 
@@ -188,4 +190,4 @@ try:
         st.warning("Seçilen periyotta risk metriklerini hesaplayacak kadar işlem günü verisi yok.")
 
 except Exception as e:
-    st.error("Kritik Sunucu Hatası Engellendi. Yahoo Finance bağlantısı geçici olarak kurulamadı.")
+    st.error("Kritik Sunucu Hatası Engellendi. Lütfen farklı bir zaman aralığı seçin.")
