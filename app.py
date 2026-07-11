@@ -5,20 +5,24 @@ import matplotlib.pyplot as plt
 
 # Sitenin Başlığı ve Arayüzü
 st.set_page_config(page_title="Taha Uyanık Green Tech Fund", layout="wide")
-st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması")
-st.markdown("BIST100 vs. Seçilmiş Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi")
+st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v1.1")
+st.markdown("BIST100 vs. Gerçek Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi")
+
+# 1. AŞAMA: GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
+hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 # Veri Çekme ve Normalizasyon
-hisseler = ['ASTOR.IS', 'ENJSA.IS', 'GWIND.IS', 'XU100.IS']
 veri = yf.download(hisseler, period='3mo')['Close']
 normalize_veri = (veri / veri.iloc[0]) * 100
-normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ASTOR.IS', 'ENJSA.IS', 'GWIND.IS']].mean(axis=1)
+
+# Taha Yeşil Fonu Oluşturma (Eşit Ağırlıklı Portföy)
+normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
 # Grafik Çizimi
 st.subheader("📊 3 Aylık Algoritmik Kıyaslama")
 fig, ax = plt.subplots(figsize=(10,4))
 ax.plot(normalize_veri.index, normalize_veri['TAHA_YESIL_FON'], label='Taha Yeşil Fon', linewidth=3)
-ax.plot(normalize_veri.index, normalize_veri['XU100.IS'], label='BIST100', linewidth=2, alpha=0.7)
+ax.plot(normalize_veri.index, normalize_veri['XU100.IS'], label='BIST100', linewidth=1.5, alpha=0.7)
 ax.legend()
 ax.grid(True)
 st.pyplot(fig)
