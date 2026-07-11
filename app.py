@@ -80,7 +80,7 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
-@st.cache_data(ttl=3600) # Veriyi 1 saat hafızada tutar, Yahoo Finance ban atamaz!
+@st.cache_data(ttl=3600) # Veriyi 1 saat hafızada tutar, Yahoo Finance engellemez!
 def veri_indir(hisseler, periyot):
     # threads=False ile RAM taşması engellenir
     return yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
@@ -96,11 +96,15 @@ try:
         
     veri = veri.ffill().bfill() # Kırık çizgileri tamir et
     
-    # 0'a bölme hatasını engellemek için güvenlik filtresi
+    # 0'a bölme hatasını engellemek için güvenlik filtresi (Infinity çöküşünü önler)
     ilk_degerler = veri.iloc[0].copy()
     ilk_degerler[ilk_degerler == 0] = 0.0001 
     
     normalize_veri = (veri / ilk_degerler) * 100
+    
+    # Plotly'nin çökmesini engellemek için sonsuzluk değerlerini temizle
+    normalize_veri = normalize_veri.replace([np.inf, -np.inf], np.nan).ffill()
+    
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
