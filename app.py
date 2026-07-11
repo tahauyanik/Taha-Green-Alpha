@@ -89,10 +89,17 @@ def safe_float(val):
     except:
         return 0.0
 
-@st.cache_data(ttl=3600)
+# BUM! SİNSİ DÜŞMAN YOK EDİLDİ: @st.cache_data (Önbellek) TAMAMEN SİLİNDİ!
+# Streamlit 1 aylık veriyi hafızaya alırken kendi kendini patlatıyordu, bu zaafiyeti kaldırdık.
 def veri_indir(hisseler, periyot):
-    # Sunucuyu boğmamak için progress bar kapatıldı.
-    df = yf.download(hisseler, period=periyot, interval="1d", progress=False, threads=False)['Close']
+    df = yf.download(hisseler, period=periyot, interval="1d", progress=False, threads=False)
+    
+    # Yfinance kütüphanesinin yeni versiyonlarındaki sütun hatasına karşı zırh
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df['Close']
+    elif 'Close' in df.columns:
+        df = df['Close']
+        
     if df.index.tz is not None:
         df.index = df.index.tz_localize(None)
     return df
