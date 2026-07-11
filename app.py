@@ -2,23 +2,27 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
-import time
+import numpy as np
 
-# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
 st.set_page_config(page_title="Taha Uyanık | Green Alpha", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
+/* Karanlık Tema ve Ana Arka Plan */
 .stApp { background-color: #0E1117 !important; }
+
+/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle */
 #MainMenu {visibility: hidden;}
 header {visibility: hidden;}
 footer {visibility: hidden;}
 
+/* Sidebar Arka Planı ve Çizgisi */
 [data-testid="stSidebar"] {
     background-color: #12151B !important;
     border-right: 1px solid #2D323C !important;
 }
 
+/* KUSURSUZ SELECTBOX (BEYAZ KUTU İMHASI) */
 div[data-baseweb="select"] { background-color: #161A22 !important; }
 div[data-baseweb="select"] > div {
     background-color: #161A22 !important;
@@ -40,6 +44,7 @@ li[role="option"]:hover {
     color: #DEFF9A !important;
 }
 
+/* METRİK KUTULARI (3D KART ETKİSİ) */
 div[data-testid="metric-container"] {
     background-color: #161A22 !important;
     border: 1px solid #DEFF9A !important; 
@@ -48,14 +53,20 @@ div[data-testid="metric-container"] {
     box-shadow: 0 4px 10px rgba(222, 255, 154, 0.05) !important;
     transition: all 0.3s ease-in-out !important;
 }
+
 div[data-testid="metric-container"]:hover {
     transform: translateY(-5px) !important;
     box-shadow: 0 8px 20px rgba(222, 255, 154, 0.2) !important;
     border: 1px solid #A3FF00 !important;
 }
 
+/* Rakamların Rengi (Neon Yeşil Vurgu) */
 [data-testid="stMetricValue"] { color: #DEFF9A !important; font-weight: 800 !important; }
+
+/* Delta (Artış/Azalış) Renkleri */
 [data-testid="stMetricDelta"] svg { fill: #A3FF00 !important; }
+
+/* Yazı Başlıkları ve Etiketleri */
 h1, h2, h3, p, label { color: #F5F5F5 !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -69,22 +80,27 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
+@st.cache_data(ttl=3600) # Veriyi 1 saat hafızada tutar, Yahoo Finance ban atamaz!
+def veri_indir(hisseler, periyot):
+    # threads=False ile RAM taşması engellenir
+    return yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
+
 try:
-    # BUM! progress=False sunucu çöküşlerini engeller. Multi-threading kaynaklı RAM taşmasını durdurur.
     with st.spinner('Kuantum algoritmaları piyasa verilerini tarıyor...'):
-        veri = yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
+        veri = veri_indir(hisseler, periyot)
     
+    # Veri Boşsa Güvenli Durdurma (Çökmeyi engeller)
     if veri.empty or len(veri) < 2:
         st.error("Şu an piyasadan yeterli veri akışı sağlanamıyor. Lütfen farklı bir zaman aralığı seçin.")
         st.stop()
         
-    # Güvenli NaN doldurma (İleri ve geri)
-    veri = veri.ffill().bfill()
+    veri = veri.ffill().bfill() # Kırık çizgileri tamir et
     
     # 0'a bölme hatasını engellemek için güvenlik filtresi
-    ilk_degerler = veri.iloc[0].replace(0, 0.0001) 
-    normalize_veri = (veri / ilk_degerler) * 100
+    ilk_degerler = veri.iloc[0].copy()
+    ilk_degerler[ilk_degerler == 0] = 0.0001 
     
+    normalize_veri = (veri / ilk_degerler) * 100
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
@@ -112,8 +128,8 @@ try:
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     st.subheader("💰 100.000 TL Simülasyon Sonuçları")
-    bist_sonuc = 100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100)
-    yesil_sonuc = 100000 * (normalize_veri['TAHA_YESIL_FON'].iloc[-1] / 100)
+    bist_sonuc = float(100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100))
+    yesil_sonuc = float(100000 * (normalize_veri['TAHA_YESIL_FON'].iloc[-1] / 100))
     fark = yesil_sonuc - bist_sonuc
 
     col1, col2, col3 = st.columns(3)
@@ -127,23 +143,29 @@ try:
     if len(getiriler) > 2:
         portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
         
-        # 1mo seçildiğinde 252 günlük yıllıklandırma matematiksel hata verir. Dinamik çarpan kullanıldı.
+        # 1mo seçildiğinde 252 günlük yıllıklandırma hata verir, bu yüzden dinamik çarpan koyduk.
         islem_gunu = len(getiriler)
         yillik_carpan = 252 if islem_gunu > 21 else islem_gunu
         
-        bist_vol = getiriler['XU100.IS'].std() * (yillik_carpan ** 0.5) * 100
-        fon_vol = portfoy_getiri.std() * (yillik_carpan ** 0.5) * 100
+        bist_vol = float(getiriler['XU100.IS'].std() * (yillik_carpan ** 0.5) * 100)
+        fon_vol = float(portfoy_getiri.std() * (yillik_carpan ** 0.5) * 100)
+
+        # NaN Kontrolü (Streamlit önyüzünü çökertmesin diye)
+        if np.isnan(bist_vol): bist_vol = 0.0
+        if np.isnan(fon_vol): fon_vol = 0.0
 
         fon_kumulatif = (1 + portfoy_getiri).cumprod()
         fon_zirve = fon_kumulatif.cummax()
-        fon_dd = ((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100
+        fon_dd = float(((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100)
+        if np.isnan(fon_dd): fon_dd = 0.0
 
         r_col1, r_col2, r_col3 = st.columns(3)
         r_col1.metric("BIST100 Volatilite", f"%{bist_vol:.2f}", delta="Risk Endeksi", delta_color="off")
-        r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}", delta="Agresif Büyüme", delta_color="off")
-        r_col3.metric("Maksimum Düşüş (MDD)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
+        r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}", delta="Agresif Büyüme Riski", delta_color="off")
+        r_col3.metric("Maksimum Düşüş (Max Drawdown)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
     else:
         st.warning("Seçilen periyotta risk metriklerini (Volatilite) hesaplayacak kadar işlem günü verisi yok.")
 
 except Exception as e:
-    st.error("Yahoo Finance veri bağlantısı şu an kurulamadı. Sistemin çökmesi engellendi.")
+    # Eğer her şeye rağmen bir hata olursa sistem çökmez, bu zırh devreye girer.
+    st.error("Yahoo Finance veri bağlantısı şu an kurulamıyor veya sistem güvenlik moduna geçti.")
