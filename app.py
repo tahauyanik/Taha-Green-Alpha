@@ -2,9 +2,10 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
+import numpy as np
 
-# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU (V2.3 Kusursuz Jilet UI)
-st.set_page_config(page_title="Taha Uyanık Green Tech Fund", layout="wide", initial_sidebar_state="expanded")
+# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
+st.set_page_config(page_title="Taha Uyanık | Green Alpha", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
@@ -24,10 +25,7 @@ footer {visibility: hidden;}
     border-right: 1px solid #2D323C !important;
 }
 
-/* ---------------------------------------------------
-   KUSURSUZ SELECTBOX (BEYAZ KUTU İMHASI - SIFIR TOLERANS)
---------------------------------------------------- */
-/* Sadece selectbox değil, etrafındaki her div'i eziyoruz */
+/* KUSURSUZ SELECTBOX (BEYAZ KUTU İMHASI) */
 div[data-baseweb="select"] {
     background-color: #161A22 !important;
 }
@@ -40,7 +38,6 @@ div[data-baseweb="select"] > div {
 div[data-baseweb="select"] svg {
     color: #DEFF9A !important; 
 }
-/* Açılır menü listesi */
 div[role="listbox"], ul[role="listbox"] {
     background-color: #161A22 !important;
     border: 1px solid #2D323C !important;
@@ -57,9 +54,7 @@ li[role="option"]:hover {
     color: #DEFF9A !important;
 }
 
-/* ---------------------------------------------------
-   METRİK KUTULARI (3D KART ETKİSİ)
---------------------------------------------------- */
+/* METRİK KUTULARI (3D KART ETKİSİ) */
 div[data-testid="metric-container"] {
     background-color: #161A22 !important;
     border: 1px solid #DEFF9A !important; 
@@ -98,24 +93,24 @@ st.sidebar.title("⚙️ Kontrol Paneli")
 st.sidebar.markdown("Analiz periyodunu seçin:")
 periyot = st.sidebar.selectbox("Zaman Aralığı", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=2)
 
-st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v2.3")
-st.markdown("BIST100 vs. Gerçek Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi (Quant Edition)")
+# YENİ AGRESİF BAŞLIK
+st.title("🌍 Taha Uyanık | Green Alpha Quant Fund")
+st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatilite ve Alfa Analizi)")
 
 # GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 # Veri Çekme, Normalizasyon ve KOPUKLUK (NaN) TAMİRİ
 veri = yf.download(hisseler, period=periyot)['Close']
-veri = veri.ffill() # TATİL BOŞLUKLARINI ÖNCEKİ GÜNLE DOLDURUR. KESİNTİSİZ ÇİZGİ!
+veri = veri.ffill() # TATİL BOŞLUKLARINI DOLDUR
 normalize_veri = (veri / veri.iloc[0]) * 100
 
 # Taha Yeşil Fonu Oluşturma
 normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
-# 3. GRAFİK ÇİZİMİ (Estetik Güncelleme - Karanlık Tema)
+# 3. GRAFİK ÇİZİMİ
 st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
 
-# Grafik Nesnesini Oluşturma
 fig = go.Figure()
 
 # Taha Yeşil Fon Çizgisi
@@ -128,81 +123,72 @@ fig.add_trace(go.Scatter(
     hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
 ))
 
-# BIST100 Çizgisi
+# BIST100 Çizgisi (DAHA PARLAK GÜMÜŞ/BUZ MAVİSİ YAPILDI)
 fig.add_trace(go.Scatter(
     x=normalize_veri.index, 
     y=normalize_veri['XU100.IS'],
     mode='lines',
     name='BIST100',
-    line=dict(color='#8892B0', width=2), 
+    line=dict(color='#B0C4DE', width=2.5), 
     hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
 ))
 
-# KUSURSUZ GRAFİK AYARLARI VE HOVER (BİLGİ KUTUSU) DÜZELTMESİ
+# GRAFİK AYARLARI VE HOVER DÜZELTMESİ
 fig.update_layout(
     plot_bgcolor='rgba(0,0,0,0)', 
     paper_bgcolor='rgba(0,0,0,0)', 
     font=dict(color='#F5F5F5'),
-    xaxis=dict(
-        showgrid=True, 
-        gridcolor='#2D323C', 
-        tickangle=-45,
-        rangeslider=dict(visible=False)
-    ),
-    yaxis=dict(
-        showgrid=True, 
-        gridcolor='#2D323C'
-    ),
-    legend=dict(
-        bgcolor='rgba(22, 26, 34, 0.9)',
-        bordercolor='#DEFF9A',
-        borderwidth=1,
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1
-    ),
+    xaxis=dict(showgrid=True, gridcolor='#2D323C', tickangle=-45, rangeslider=dict(visible=False)),
+    yaxis=dict(showgrid=True, gridcolor='#2D323C'),
+    legend=dict(bgcolor='rgba(22, 26, 34, 0.9)', bordercolor='#DEFF9A', borderwidth=1, orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     margin=dict(l=0, r=0, t=50, b=0),
     hovermode='x unified',
-    hoverlabel=dict(
-        bgcolor="#161A22", 
-        font_size=14,
-        font_family="Arial",
-        font_color="#F5F5F5",
-        bordercolor="#DEFF9A" 
-    )
+    hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#F5F5F5", bordercolor="#DEFF9A")
 )
 
-# BUM! O ÇİRKİN ARAÇ ÇUBUĞUNU (MODEBAR) TAMAMEN YOK EDEN KOD BURADA:
+# O İĞRENÇ ARAÇ ÇUBUĞUNU (MODEBAR) TAMAMEN GİZLİYORUZ
 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 # Finansal Vurgun (Backtest)
 st.subheader("💰 100.000 TL Simülasyon Sonuçları")
-bist_sonuc = 100000 * (normalize_veri['XU100.IS'].dropna().iloc[-1] / 100)
-yesil_sonuc = 100000 * (normalize_veri['TAHA_YESIL_FON'].dropna().iloc[-1] / 100)
-fark = yesil_sonuc - bist_sonuc
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL")
-col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL", delta=f"{((yesil_sonuc-100000)/100000)*100:.1f}% Fon Büyümesi")
-col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"{fark:+,.0f} TL", delta="Piyasayı Yendi" if fark > 0 else "- Piyasaya Yenildi")
+try:
+    bist_sonuc = 100000 * (normalize_veri['XU100.IS'].dropna().iloc[-1] / 100)
+    yesil_sonuc = 100000 * (normalize_veri['TAHA_YESIL_FON'].dropna().iloc[-1] / 100)
+    fark = yesil_sonuc - bist_sonuc
 
-# AĞIR SIKLET RİSK METRİKLERİ
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL")
+    col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL", delta=f"{((yesil_sonuc-100000)/100000)*100:.1f}% Fon Büyümesi")
+    col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"{fark:+,.0f} TL", delta="Piyasayı Yendi" if fark > 0 else "- Piyasaya Yenildi")
+except Exception as e:
+    st.warning("Simülasyon sonuçları hesaplanırken veri yetersizliği yaşandı.")
+
+# AĞIR SIKLET RİSK METRİKLERİ (1mo ÇÖKÜŞÜNÜ ENGELLEYEN ZIRH EKLENDİ)
 st.subheader("⚖️ Kantitatif Risk Analizi")
 getiriler = veri.pct_change().dropna()
-portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
-# Volatilite Hesaplama
-bist_vol = getiriler['XU100.IS'].std() * (252 ** 0.5) * 100
-fon_vol = portfoy_getiri.std() * (252 ** 0.5) * 100
+# 1 aylık (kısa) verilerde kutuların silinmesini önleyen güvenli hesaplama bloğu
+try:
+    portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
+    
+    # Veri sayısı yeterliyse yıllık volatilite hesapla, yetersizse (1 ay gibi) eldeki verinin volatilitesini hesapla.
+    if len(getiriler) > 20: 
+        bist_vol = getiriler['XU100.IS'].std() * (252 ** 0.5) * 100
+        fon_vol = portfoy_getiri.std() * (252 ** 0.5) * 100
+    else:
+        bist_vol = getiriler['XU100.IS'].std() * 100
+        fon_vol = portfoy_getiri.std() * 100
 
-# Max Drawdown Hesaplama
-fon_kumulatif = (1 + portfoy_getiri).cumprod()
-fon_zirve = fon_kumulatif.cummax()
-fon_dd = ((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100
+    # Max Drawdown Hesaplama
+    fon_kumulatif = (1 + portfoy_getiri).cumprod()
+    fon_zirve = fon_kumulatif.cummax()
+    fon_dd = ((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100
 
-r_col1, r_col2, r_col3 = st.columns(3)
-r_col1.metric("BIST100 Yıllık Volatilite", f"%{bist_vol:.2f}", delta="Risk Endeksi", delta_color="off")
-r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}", delta="Agresif Büyüme Riski", delta_color="off")
-r_col3.metric("Maksimum Düşüş (Max Drawdown)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
+    r_col1, r_col2, r_col3 = st.columns(3)
+    r_col1.metric("BIST100 Volatilite", f"%{bist_vol:.2f}", delta="Risk Endeksi", delta_color="off")
+    r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}", delta="Agresif Büyüme Riski", delta_color="off")
+    r_col3.metric("Maksimum Düşüş (Max Drawdown)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
+
+except Exception as e:
+    st.error("Seçilen tarih aralığında Risk Metriklerini hesaplamak için yeterli işlem günü verisi bulunmamaktadır. Lütfen daha geniş bir aralık seçin.")
