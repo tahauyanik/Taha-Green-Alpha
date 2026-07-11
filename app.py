@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 
-# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
 st.set_page_config(page_title="Taha Uyanık | Green Alpha", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -81,13 +80,21 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
-# SUNUCUYU YORMAMAK İÇİN CACHE ZIRHI (HAFIZA)
-@st.cache_data(ttl=3600) 
+def safe_float(val):
+    """Zehirli verileri (NaN/Inf) UI'a gitmeden temizler ve çöküşü (Oh no) engeller."""
+    try:
+        v = float(val)
+        if np.isnan(v) or np.isinf(v): return 0.0
+        return v
+    except:
+        return 0.0
+
+@st.cache_data(ttl=3600)
 def veri_indir(hisseler, periyot):
-    # interval="1d" zorunlu kılındı. Saatlik verinin sistemi çökertmesi engellendi!
+    # Sunucuyu boğmamak için progress bar kapatıldı.
     df = yf.download(hisseler, period=periyot, interval="1d", progress=False, threads=False)['Close']
-    # HAYALET PROTOKOLÜ 1: Zaman dilimi (Timezone) formatı silinerek Streamlit'in kafasının karışması engellendi.
-    df.index = pd.to_datetime(df.index).tz_localize(None)
+    if df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
     return df
 
 try:
@@ -110,18 +117,19 @@ try:
 
     st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
 
+    guvenli_tarihler = normalize_veri.index.strftime('%Y-%m-%d').tolist()
+    y_yesil = normalize_veri['TAHA_YESIL_FON'].apply(safe_float).tolist()
+    y_bist = normalize_veri['XU100.IS'].apply(safe_float).tolist()
+
     fig = go.Figure()
 
-    # HAYALET PROTOKOLÜ 2: Tarihler sisteme 'Yazı (Metin)' olarak gönderiliyor. Motor çökmüyor!
-    guvenli_tarihler = normalize_veri.index.strftime('%Y-%m-%d').tolist()
-
     fig.add_trace(go.Scatter(
-        x=guvenli_tarihler, y=normalize_veri['TAHA_YESIL_FON'], mode='lines',
+        x=guvenli_tarihler, y=y_yesil, mode='lines',
         name='Taha Yeşil Fon', line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
     fig.add_trace(go.Scatter(
-        x=guvenli_tarihler, y=normalize_veri['XU100.IS'], mode='lines',
+        x=guvenli_tarihler, y=y_bist, mode='lines',
         name='BIST100', line=dict(color='#B0C4DE', width=2.5), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
     ))
@@ -137,13 +145,16 @@ try:
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     st.subheader("💰 100.000 TL Simülasyon Sonuçları")
-    bist_sonuc = float(100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100))
-    yesil_sonuc = float(100000 * (normalize_veri['TAHA_YESIL_FON'].iloc[-1] / 100))
+    
+    bist_sonuc = safe_float(100000 * (y_bist[-1] / 100))
+    yesil_sonuc = safe_float(100000 * (y_yesil[-1] / 100))
     fark = yesil_sonuc - bist_sonuc
+    
+    fon_buyumesi = safe_float(((yesil_sonuc - 100000) / 100000) * 100)
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL")
-    col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL", delta=f"{((yesil_sonuc-100000)/100000)*100:.1f}% Fon Büyümesi")
+    col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL", delta=f"{fon_buyumesi:.1f}% Fon Büyümesi")
     col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"{fark:+,.0f} TL", delta="Piyasayı Yendi" if fark > 0 else "- Piyasaya Yenildi")
 
     st.subheader("⚖️ Kantitatif Risk Analizi")
@@ -152,21 +163,15 @@ try:
     if len(getiriler) > 2:
         portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
         
-        # 1mo seçildiğinde 252 günlük yıllıklandırma hata verir, dinamik çarpan koyduk.
         islem_gunu = len(getiriler)
         yillik_carpan = 252 if islem_gunu > 21 else islem_gunu
         
-        bist_vol = float(getiriler['XU100.IS'].std() * (yillik_carpan ** 0.5) * 100)
-        fon_vol = float(portfoy_getiri.std() * (yillik_carpan ** 0.5) * 100)
-
-        # NaN Kontrolü
-        if np.isnan(bist_vol): bist_vol = 0.0
-        if np.isnan(fon_vol): fon_vol = 0.0
+        bist_vol = safe_float(getiriler['XU100.IS'].std() * (yillik_carpan ** 0.5) * 100)
+        fon_vol = safe_float(portfoy_getiri.std() * (yillik_carpan ** 0.5) * 100)
 
         fon_kumulatif = (1 + portfoy_getiri).cumprod()
         fon_zirve = fon_kumulatif.cummax()
-        fon_dd = float(((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100)
-        if np.isnan(fon_dd): fon_dd = 0.0
+        fon_dd = safe_float(((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100)
 
         r_col1, r_col2, r_col3 = st.columns(3)
         r_col1.metric("BIST100 Volatilite", f"%{bist_vol:.2f}", delta="Risk Endeksi", delta_color="off")
