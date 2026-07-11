@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # Sitenin Başlığı ve Arayüzü
 st.set_page_config(page_title="Taha Uyanık Green Tech Fund", layout="wide")
-st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v1.1")
+st.title("🌍 Taha Uyanık | İslami Yeşil Finans Algoritması v1.2")
 st.markdown("BIST100 vs. Gerçek Yeşil Enerji/Katılım Hisseleri Volatilite ve Alfa Analizi")
 
 # 1. AŞAMA: GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
@@ -37,3 +37,22 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} TL")
 col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} TL")
 col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"+{fark:,.0f} TL", "Piyasayı Yendi")
+
+# 2. AŞAMA: AĞIR SIKLET RİSK METRİKLERİ
+st.subheader("⚖️ Kantitatif Risk Analizi")
+getiriler = veri.pct_change().dropna()
+portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
+
+# Volatilite Hesaplama
+bist_vol = getiriler['XU100.IS'].std() * (252 ** 0.5) * 100
+fon_vol = portfoy_getiri.std() * (252 ** 0.5) * 100
+
+# Max Drawdown Hesaplama
+fon_kumulatif = (1 + portfoy_getiri).cumprod()
+fon_zirve = fon_kumulatif.cummax()
+fon_dd = ((fon_kumulatif - fon_zirve) / fon_zirve).min() * 100
+
+r_col1, r_col2, r_col3 = st.columns(3)
+r_col1.metric("BIST100 Yıllık Volatilite", f"%{bist_vol:.2f}")
+r_col2.metric("Taha Yeşil Fon Volatilite", f"%{fon_vol:.2f}")
+r_col3.metric("Maksimum Düşüş (Max Drawdown)", f"%{fon_dd:.2f}")
