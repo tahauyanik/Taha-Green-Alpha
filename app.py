@@ -23,52 +23,54 @@ footer {visibility: hidden;}
 }
 
 /* Kusursuz Selectbox (Beyaz Kutu İmhasi) */
-div[data-baseweb="select"] { background-color: #161A22 !important; }
 div[data-baseweb="select"] > div {
     background-color: #161A22 !important;
     color: #F5F5F5 !important;
     border: 1px solid #DEFF9A !important; 
     border-radius: 8px !important;
 }
-div[data-baseweb="select"] svg { color: #DEFF9A !important; }
-div[role="listbox"], ul[role="listbox"] {
+ul[role="listbox"] {
     background-color: #161A22 !important;
-    border: 1px solid #2D323C !important;
 }
-ul[data-testid="stSelectboxVirtualDropdown"] { background-color: #161A22 !important; }
-li[role="option"] { color: #F5F5F5 !important; background-color: #161A22 !important; }
-li[role="option"]:hover { background-color: #2D323C !important; color: #DEFF9A !important; }
+li[role="option"] {
+    background-color: #161A22 !important;
+    color: #F5F5F5 !important;
+}
+li[role="option"]:hover {
+    background-color: #2D323C !important;
+    color: #DEFF9A !important;
+}
 
-/* V5.2 KESİN ÇÖZÜM: METRİK KUTULARI (3D KART ETKİSİ GERİ DÖNDÜ) */
-div[data-testid="metric-container"], div[data-testid="stMetric"] {
-    background-color: #1A1E26 !important; /* Arka plandan ayrışması için aydınlatıldı */
-    border: 1px solid #DEFF9A !important; /* Neon Yeşil Sınırlar Geri Döndü! */
+/* Toggle (Şalter) Rengini Neon Yeşil Yapma (Kırmızıdan Kurtuluş) */
+div[data-testid="stToggle"] div[data-baseweb="checkbox"] > div:first-child {
+    background-color: #2D323C !important;
+}
+div[data-testid="stToggle"] input:checked + div > div:first-child {
+    background-color: #A3FF00 !important;
+}
+
+/* V5.2 METRİK KUTULARI (3D KART ETKİSİ) */
+div[data-testid="metric-container"] {
+    background-color: #1A1E26 !important;
+    border: 1px solid #DEFF9A !important;
     padding: 20px !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 10px rgba(222, 255, 154, 0.05) !important;
     transition: all 0.3s ease-in-out !important;
 }
 
-div[data-testid="metric-container"]:hover, div[data-testid="stMetric"]:hover {
+div[data-testid="metric-container"]:hover {
     transform: translateY(-5px) !important;
     box-shadow: 0 8px 20px rgba(222, 255, 154, 0.2) !important;
     border: 1px solid #A3FF00 !important;
 }
 
-/* Rakamların Rengi (Neon Yeşil Vurgu) */
+/* Rakamların Rengi ve Etiketleri */
 [data-testid="stMetricValue"] > div { color: #DEFF9A !important; font-weight: 900 !important; }
-
-/* Alt Başlıklar (Okunabilirlik için gümüş/beyaz) */
 [data-testid="stMetricLabel"] > div > div > p { color: #B0C4DE !important; font-weight: 600 !important; font-size: 16px !important; }
-
-/* Delta (Artış/Azalış) Renkleri */
 [data-testid="stMetricDelta"] svg { fill: #A3FF00 !important; }
 [data-testid="stMetricDelta"] > div { color: #A3FF00 !important; font-weight: bold !important; }
-
-/* Yazı Başlıkları ve Etiketleri */
 h1, h2, h3, p, label { color: #F5F5F5 !important; }
-
-/* Slider Renkleri */
 div[data-baseweb="slider"] div { background-color: #DEFF9A !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -80,7 +82,6 @@ periyot = st.sidebar.selectbox("Zaman Aralığı", ["1mo", "3mo", "6mo", "1y", "
 st.sidebar.markdown("---")
 st.sidebar.markdown("🧠 **Algoritmik Araçlar**")
 
-# V5.2: Dinamik Trend Kalkanı (Kullanıcı Seçimi)
 trend_goster = st.sidebar.toggle("Trend Kalkanı (SMA Ayarları)", value=False, help="Kendi belirlediğin hareketli ortalamaları açar.")
 
 sma_kisa = 20
@@ -96,7 +97,6 @@ st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatili
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 try:
-    # Veriyi çek (Çökmeyi engelleyen parametrelerle)
     veri = yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
     
     if veri.empty:
@@ -104,15 +104,12 @@ try:
         st.stop()
         
     veri = veri.ffill().bfill() 
-    
-    # 0'a bölme hatasını önleme
     ilk_satir = veri.iloc[0].replace(0, 0.0001)
     normalize_veri = (veri / ilk_satir) * 100
     
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     if trend_goster:
-        # Dinamik SMA hesaplaması
         if len(normalize_veri) >= sma_kisa:
             normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
         if len(normalize_veri) >= sma_uzun:
@@ -122,19 +119,15 @@ try:
 
     fig = go.Figure()
 
-    # Taha Yeşil Fon Çizgisi
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index.strftime('%Y-%m-%d'), 
-        y=normalize_veri['TAHA_YESIL_FON'],
+        x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['TAHA_YESIL_FON'],
         mode='lines', name='Taha Yeşil Fon',
         line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
 
-    # BIST100 Çizgisi
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index.strftime('%Y-%m-%d'), 
-        y=normalize_veri['XU100.IS'],
+        x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['XU100.IS'],
         mode='lines', name='BIST100',
         line=dict(color='#64748B', width=2), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
@@ -144,35 +137,28 @@ try:
         if f'SMA_{sma_kisa}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
                 x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_kisa}'],
-                mode='lines', name=f'SMA {sma_kisa} (Hızlı Trend)',
-                line=dict(color='#FFA500', width=1.5, dash='dot'),
-                hovertemplate=f"SMA {sma_kisa}: %{{y:.2f}}<extra></extra>"
+                mode='lines', name=f'SMA {sma_kisa} (Hızlı Trend)', line=dict(color='#FFA500', width=1.5, dash='dot')
             ))
         if f'SMA_{sma_uzun}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
                 x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_uzun}'],
-                mode='lines', name=f'SMA {sma_uzun} (Ana Trend)',
-                line=dict(color='#FF1493', width=1.5, dash='dot'),
-                hovertemplate=f"SMA {sma_uzun}: %{{y:.2f}}<extra></extra>"
+                mode='lines', name=f'SMA {sma_uzun} (Ana Trend)', line=dict(color='#FF1493', width=1.5, dash='dot')
             ))
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45, rangeslider=dict(visible=False)),
+        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45),
         yaxis=dict(showgrid=True, gridcolor='#1E222A'),
+        # V5.3 DÜZELTME: Lejant grafiğin EN ALTINA, X Ekseninin altına taşındı. Zoom tuşlarıyla asla çakışmayacak!
         legend=dict(
-            bgcolor='rgba(22, 26, 34, 0.9)', 
-            bordercolor='#DEFF9A', 
-            borderwidth=1, 
-            orientation="h", 
-            yanchor="bottom", y=1.02, xanchor="right", x=1,
-            font=dict(color='#FFFFFF', size=13) # V5.2 KESİN ÇÖZÜM: OKUNMAYAN YAZILAR ZORLA BEYAZ YAPILDI
+            bgcolor='rgba(22, 26, 34, 0.9)', bordercolor='#DEFF9A', borderwidth=1, 
+            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5,
+            font=dict(color='#FFFFFF', size=13)
         ),
-        margin=dict(l=0, r=0, t=50, b=0), hovermode='x unified',
+        margin=dict(l=0, r=0, t=20, b=50), hovermode='x unified',
         hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#FFFFFF", bordercolor="#DEFF9A")
     )
     
-    # ZOOM GERİ GELDİ (config={'displayModeBar': False} kaldırıldı)
     st.plotly_chart(fig, use_container_width=True) 
 
     st.markdown("### 💰 100.000 TL Simülasyon Sonuçları")
@@ -194,7 +180,6 @@ try:
         bist_vol = float(np.nan_to_num(getiriler['XU100.IS'].std() * (252 ** 0.5) * 100))
         fon_vol = float(np.nan_to_num(portfoy_getiri.std() * (252 ** 0.5) * 100))
 
-        # Drawdown Serisini Hesapla (Grafik için)
         fon_kumulatif = (1 + portfoy_getiri).cumprod()
         fon_zirve = fon_kumulatif.cummax()
         drawdown_serisi = ((fon_kumulatif - fon_zirve) / fon_zirve) * 100
@@ -213,9 +198,8 @@ try:
         
         with grafik_col1:
             st.markdown("**Fon Dağılım Modeli (Eşit Ağırlıklı)**")
-            # Donut Grafik
             labels = ['ALFAS', 'YEOTK', 'ASTOR', 'KCAER']
-            values = [25, 25, 25, 25] # Eşit ağırlıklı algoritma
+            values = [25, 25, 25, 25] 
             colors = ['#DEFF9A', '#A3FF00', '#2E8B57', '#00FA9A']
             
             fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.6, marker=dict(colors=colors, line=dict(color='#161A22', width=2)))])
@@ -228,15 +212,11 @@ try:
             
         with grafik_col2:
             st.markdown("**Sualtı Grafiği (Underwater / Drawdown)**")
-            # Kriz (Drawdown) Alan Grafiği
             fig_dd = go.Figure()
             fig_dd.add_trace(go.Scatter(
-                x=drawdown_serisi.index.strftime('%Y-%m-%d'), 
-                y=drawdown_serisi,
-                fill='tozeroy', mode='lines',
-                line=dict(color='#FF4C4C', width=1),
-                fillcolor='rgba(255, 76, 76, 0.2)',
-                name='Düşüş (Drawdown)',
+                x=drawdown_serisi.index.strftime('%Y-%m-%d'), y=drawdown_serisi,
+                fill='tozeroy', mode='lines', line=dict(color='#FF4C4C', width=1),
+                fillcolor='rgba(255, 76, 76, 0.2)', name='Düşüş (Drawdown)',
                 hovertemplate="Tarih: %{x}<br>Düşüş: %{y:.2f}%<extra></extra>"
             ))
             fig_dd.update_layout(
