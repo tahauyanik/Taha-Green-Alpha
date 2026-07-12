@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 
+# 1. SAYFA ARAYÜZ AYARLARI VE AGRESİF CSS ENJEKSİYONU
 st.set_page_config(page_title="Taha Uyanık | Green Alpha Quant", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -64,25 +65,41 @@ div[data-testid="metric-container"]:hover {
 
 /* Yazı Başlıkları ve Etiketleri */
 h1, h2, h3, p, label { color: #F5F5F5 !important; }
+
+/* Slider Renkleri */
+div[data-baseweb="slider"] div {
+    background-color: #DEFF9A !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
+# 2. ZAMAN MAKİNESİ (Sidebar Paneli)
 st.sidebar.title("⚙️ Kontrol Paneli")
 st.sidebar.markdown("Analiz periyodunu seçin:")
 periyot = st.sidebar.selectbox("Zaman Aralığı", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=2)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("🧠 **Algoritmik Araçlar**")
-# V5.0 YENİ: Trend Kalkanı Düğmesi
-trend_goster = st.sidebar.toggle("Trend Kalkanı (SMA 20/50)", value=False, help="20 ve 50 günlük hareketli ortalamaları açar.")
 
+# V5.1 YENİ: Dinamik Trend Kalkanı (Kullanıcı Seçimi)
+trend_goster = st.sidebar.toggle("Trend Kalkanı (SMA Ayarları)", value=False, help="Kendi belirlediğin hareketli ortalamaları açar.")
+
+sma_kisa = 20
+sma_uzun = 50
+
+if trend_goster:
+    sma_kisa = st.sidebar.slider("Kısa Vade SMA", min_value=5, max_value=100, value=20, step=1)
+    sma_uzun = st.sidebar.slider("Uzun Vade SMA", min_value=10, max_value=250, value=50, step=1)
+
+# YENİ AGRESİF BAŞLIK
 st.title("🌍 Taha Uyanık | Green Alpha Quant Fund")
 st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatilite ve Alfa Analizi)")
 
+# GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 try:
-    # Veriyi çek
+    # Veri Çekme ve KOPUKLUK (NaN) TAMİRİ
     veri = yf.download(hisseler, period=periyot, progress=False, threads=False)['Close']
     
     if veri.empty:
@@ -91,55 +108,54 @@ try:
         
     veri = veri.ffill().bfill() 
     
-    # 0'a bölme hatasını önleme
+    # 0'a bölme kalkanı
     ilk_satir = veri.iloc[0].replace(0, 0.0001)
     normalize_veri = (veri / ilk_satir) * 100
     
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     if trend_goster:
-        # Yeterli gün varsa SMA hesapla
-        if len(normalize_veri) >= 20:
-            normalize_veri['SMA_20'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=20).mean()
-        if len(normalize_veri) >= 50:
-            normalize_veri['SMA_50'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=50).mean()
+        # Dinamik SMA hesaplaması
+        if len(normalize_veri) >= sma_kisa:
+            normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
+        if len(normalize_veri) >= sma_uzun:
+            normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
 
+    # 3. GRAFİK ÇİZİMİ
     st.subheader(f"📊 Algoritmik Kıyaslama ({periyot})")
 
     fig = go.Figure()
 
-    # Taha Yeşil Fon Çizgisi
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index.strftime('%Y-%m-%d'), # Hayalet Protokolü: Tarihleri metne çevir
+        x=normalize_veri.index.strftime('%Y-%m-%d'), 
         y=normalize_veri['TAHA_YESIL_FON'],
         mode='lines', name='Taha Yeşil Fon',
         line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
 
-    # BIST100 Çizgisi
     fig.add_trace(go.Scatter(
         x=normalize_veri.index.strftime('%Y-%m-%d'), 
         y=normalize_veri['XU100.IS'],
         mode='lines', name='BIST100',
-        line=dict(color='#64748B', width=2), # Daha mat, arka planda kalacak
+        line=dict(color='#64748B', width=2), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
     ))
 
     if trend_goster:
-        if 'SMA_20' in normalize_veri.columns:
+        if f'SMA_{sma_kisa}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
-                x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['SMA_20'],
-                mode='lines', name='SMA 20 (Hızlı Trend)',
+                x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_kisa}'],
+                mode='lines', name=f'SMA {sma_kisa} (Hızlı Trend)',
                 line=dict(color='#FFA500', width=1.5, dash='dot'),
-                hovertemplate="SMA 20: %{y:.2f}<extra></extra>"
+                hovertemplate=f"SMA {sma_kisa}: %{{y:.2f}}<extra></extra>"
             ))
-        if 'SMA_50' in normalize_veri.columns:
+        if f'SMA_{sma_uzun}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
-                x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['SMA_50'],
-                mode='lines', name='SMA 50 (Ana Trend)',
+                x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_uzun}'],
+                mode='lines', name=f'SMA {sma_uzun} (Ana Trend)',
                 line=dict(color='#FF1493', width=1.5, dash='dot'),
-                hovertemplate="SMA 50: %{y:.2f}<extra></extra>"
+                hovertemplate=f"SMA {sma_uzun}: %{{y:.2f}}<extra></extra>"
             ))
 
     fig.update_layout(
@@ -150,8 +166,11 @@ try:
         margin=dict(l=0, r=0, t=50, b=0), hovermode='x unified',
         hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#F5F5F5", bordercolor="#DEFF9A")
     )
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    
+    # V5.1 ZOOM GERİ DÖNDÜ! (config={...} kısmını kaldırdık)
+    st.plotly_chart(fig, use_container_width=True) 
 
+    # 4. SİMÜLASYON VE RİSK METRİKLERİ
     st.markdown("### 💰 100.000 TL Simülasyon Sonuçları")
     
     bist_sonuc = float(np.nan_to_num(100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100), nan=100000))
@@ -171,7 +190,6 @@ try:
         bist_vol = float(np.nan_to_num(getiriler['XU100.IS'].std() * (252 ** 0.5) * 100))
         fon_vol = float(np.nan_to_num(portfoy_getiri.std() * (252 ** 0.5) * 100))
 
-        # Drawdown Serisini Hesapla (Grafik için)
         fon_kumulatif = (1 + portfoy_getiri).cumprod()
         fon_zirve = fon_kumulatif.cummax()
         drawdown_serisi = ((fon_kumulatif - fon_zirve) / fon_zirve) * 100
@@ -190,9 +208,8 @@ try:
         
         with grafik_col1:
             st.markdown("**Fon Dağılım Modeli (Eşit Ağırlıklı)**")
-            # Donut Grafik
             labels = ['ALFAS', 'YEOTK', 'ASTOR', 'KCAER']
-            values = [25, 25, 25, 25] # Eşit ağırlıklı algoritma
+            values = [25, 25, 25, 25] 
             colors = ['#DEFF9A', '#A3FF00', '#2E8B57', '#00FA9A']
             
             fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.6, marker=dict(colors=colors, line=dict(color='#161A22', width=2)))])
@@ -201,11 +218,11 @@ try:
                 font=dict(color='#F5F5F5'), margin=dict(t=20, b=20, l=20, r=20),
                 showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
             )
+            # Pie grafiğinde zoom'a gerek yok
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
             
         with grafik_col2:
             st.markdown("**Sualtı Grafiği (Underwater / Drawdown)**")
-            # Kriz (Drawdown) Alan Grafiği
             fig_dd = go.Figure()
             fig_dd.add_trace(go.Scatter(
                 x=drawdown_serisi.index.strftime('%Y-%m-%d'), 
@@ -222,7 +239,8 @@ try:
                 yaxis=dict(showgrid=True, gridcolor='#1E222A', title="% Düşüş"),
                 margin=dict(t=20, b=20, l=20, r=20), hovermode='x unified'
             )
-            st.plotly_chart(fig_dd, use_container_width=True, config={'displayModeBar': False})
+            # Drawdown'da Zoom Geri Geldi!
+            st.plotly_chart(fig_dd, use_container_width=True)
 
     else:
         st.warning("Seçilen periyotta risk metriklerini hesaplayacak kadar veri yok.")
