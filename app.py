@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 
 st.set_page_config(
-    page_title="Sovereign Quant | V17.0 GENTA", 
+    page_title="Sovereign Quant | V18.0 FIBONACCI", 
     page_icon="🌍", 
     layout="wide", 
     initial_sidebar_state="expanded"
@@ -15,7 +15,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 /* Font ve Uzay Karanlığı Arka Planı */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif !important;
 }
@@ -47,7 +47,7 @@ a { pointer-events: none; cursor: default; } /* Kırmızı link ikonlarını öl
     box-shadow: 0px 0px 20px rgba(222, 255, 154, 0.4) !important;
 }
 
-/* SEKMELER (TABS) - GENTA ELİT TASARIMI (SARI ARKA PLAN İNFAZI) */
+/* SEKMELER (TABS) - KUSURSUZ GENTA/FIBONACCI ESTETİĞİ */
 .stTabs [data-baseweb="tab-list"] {
     gap: 40px;
     background-color: transparent !important;
@@ -73,13 +73,14 @@ a { pointer-events: none; cursor: default; } /* Kırmızı link ikonlarını öl
     background-color: transparent !important; 
     font-weight: 700 !important;
 }
+/* KALINLAŞTIRILMIŞ VE YUVARLATILMIŞ NEON ALT ÇİZGİ */
 div[data-baseweb="tab-highlight"] {
     background-color: #DEFF9A !important;
     height: 3px !important;
     border-radius: 3px 3px 0 0 !important;
 }
 
-/* 3D GLASSMORPHISM KARTLAR (Altın Oran ve Mükemmel Padding) */
+/* 3D GLASSMORPHISM KARTLAR (TAM ALTIN ORAN: 42/26 = 1.61) */
 .glass-metric-card {
     background: linear-gradient(160deg, rgba(20, 25, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%);
     backdrop-filter: blur(20px);
@@ -87,13 +88,13 @@ div[data-baseweb="tab-highlight"] {
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-top: 1px solid rgba(222, 255, 154, 0.3);
     border-radius: 16px;
-    padding: 24px;
+    padding: 26px 42px; /* ALTIN ORAN PADDING */
     box-shadow: 0 15px 35px -10px rgba(0,0,0,0.8);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 140px;
+    min-height: 150px;
     position: relative;
     overflow: hidden;
 }
@@ -109,16 +110,16 @@ div[data-baseweb="tab-highlight"] {
 .glass-metric-title {
     color: #8B949E;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600; /* İNCE VE ZARİF */
     text-transform: uppercase;
     letter-spacing: 1.5px;
 }
 .glass-metric-value {
     color: #F5F5F5;
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 34px; /* ALTIN ORAN BÜYÜKLÜK */
+    font-weight: 800; /* DOMİNANT VE KALIN */
     letter-spacing: -1px;
-    margin: 10px 0;
+    margin: 12px 0;
 }
 .glass-metric-delta.positive { color: #A3FF00; font-size: 13px; font-weight: 600; }
 .glass-metric-delta.negative { color: #FF4C4C; font-size: 13px; font-weight: 600; }
@@ -224,7 +225,7 @@ class SovereignVisualEngine:
     @classmethod
     def apply_premium_layout(cls, fig, title=""):
         fig.update_layout(
-            title=dict(text=title, font=dict(color='#F5F5F5', size=15, family="Inter")),
+            title=dict(text=title, font=dict(color='#F5F5F5', size=15, family="Inter", weight="bold")),
             plot_bgcolor=cls.COLORS['bg'], paper_bgcolor=cls.COLORS['bg'],
             font=dict(color=cls.COLORS['text'], family="Inter"),
             xaxis=dict(showgrid=True, gridcolor=cls.COLORS['grid'], tickfont=dict(size=11, color='#6B7280')),
@@ -237,7 +238,7 @@ class SovereignVisualEngine:
 
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png", width=40)
 st.sidebar.markdown("<h3 style='font-weight: 800; margin-bottom: 0;'>Kontrol Paneli</h3>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 0;'>V17.0 GENTA ARCHITECTURE</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 0;'>V18.0 FIBONACCI ARCHITECTURE</p>", unsafe_allow_html=True)
 
 st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600; margin-top:20px;'>Zaman Aralığı</p>", unsafe_allow_html=True)
 periyot = st.sidebar.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"], index=3, label_visibility="collapsed")
@@ -246,18 +247,16 @@ st.sidebar.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600;'>🧠 Algoritmik Araçlar</p>", unsafe_allow_html=True)
 
 if 'trend_goster' not in st.session_state: st.session_state.trend_goster = True
-if 'bb_goster' not in st.session_state: st.session_state.bb_goster = False
 
 trend_goster = st.sidebar.checkbox("Trend Kalkanı (SMA)", value=st.session_state.trend_goster)
-bb_goster = st.sidebar.checkbox("Volatilite (Bollinger)", value=st.session_state.bb_goster)
 
 sma_kisa, sma_uzun = 20, 50
 if trend_goster:
     sma_kisa = st.sidebar.slider("Kısa Vade SMA", 5, 100, 20)
     sma_uzun = st.sidebar.slider("Uzun Vade SMA", 10, 250, 50)
 
-st.markdown("<h1 style='font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px;'>🌍 Taha Uyanık <span style='color: #2D323C;'>|</span> <span style='color: #F5F5F5;'>Ultra Premium Quant Fund</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #8B949E; font-size: 14px; margin-bottom: 25px;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V17.0 GENTA)</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='font-size: 38px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px;'>🌍 Taha Uyanık <span style='color: #2D323C;'>|</span> <span style='color: #F5F5F5;'>Ultra Premium Quant Fund</span></h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #8B949E; font-size: 14px; margin-bottom: 30px;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V18.0 SUPREMACY)</p>", unsafe_allow_html=True)
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
@@ -276,12 +275,6 @@ try:
     if trend_goster:
         normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
         normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
-        
-    if bb_goster:
-        normalize_veri['BB_SMA'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=20).mean()
-        std = normalize_veri['TAHA_YESIL_FON'].rolling(window=20).std()
-        normalize_veri['BB_UPPER'] = normalize_veri['BB_SMA'] + (std * 2)
-        normalize_veri['BB_LOWER'] = normalize_veri['BB_SMA'] - (std * 2)
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📈 Algoritmik Terminal", 
@@ -292,19 +285,15 @@ try:
     ])
 
     with tab1:
-        st.markdown("<h3 style='margin-bottom: 10px; color: #F5F5F5; font-size: 22px;'>Fon Performans Kıyaslaması</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 15px; color: #F5F5F5; font-size: 22px; font-weight: 700;'>Fon Performans Kıyaslaması</h3>", unsafe_allow_html=True)
 
         fig = go.Figure()
         
-        if bb_goster and 'BB_UPPER' in normalize_veri.columns:
-            fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['BB_UPPER'], mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'))
-            fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['BB_LOWER'], mode='lines', line=dict(width=0), fill='tonexty', fillcolor='rgba(222, 255, 154, 0.05)', showlegend=False, hoverinfo='skip'))
-
         fig.add_trace(go.Scatter(
             x=normalize_veri.index, y=normalize_veri['TAHA_YESIL_FON'], 
             mode='lines', name='Sovereign Yeşil Fon', 
             line=dict(color=SovereignVisualEngine.COLORS['fund'], width=2.5),
-            fill='tozeroy', fillcolor='rgba(222, 255, 154, 0.05)'
+            fill='tozeroy', fillcolor='rgba(222, 255, 154, 0.04)'
         ))
         
         fig.add_trace(go.Scatter(
@@ -323,7 +312,7 @@ try:
         fig.update_layout(legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5), height=450)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}) 
 
-        st.markdown("<br><h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px;'>100.000 TL Performans Simülasyonu</h3>", unsafe_allow_html=True)
+        st.markdown("<br><h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px; font-weight: 700;'>💰 100.000 TL Performans Simülasyonu</h3>", unsafe_allow_html=True)
         
         bist_sonuc = float(np.nan_to_num(100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100), nan=100000))
         yesil_sonuc = float(np.nan_to_num(100000 * (normalize_veri['TAHA_YESIL_FON'].iloc[-1] / 100), nan=100000))
@@ -331,7 +320,7 @@ try:
         fon_buyume = ((yesil_sonuc-100000)/100000)*100
 
         html_cards = f"""
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 20px;">
             <div class="glass-metric-card">
                 <div>
                     <div class="glass-metric-title">Klasik BIST100 Getirisi</div>
@@ -374,7 +363,7 @@ try:
             )
             
             for annotation in fig_tech['layout']['annotations']:
-                annotation['font'] = dict(size=12, color='#8B949E', family='Inter')
+                annotation['font'] = dict(size=12, color='#8B949E', family='Inter', weight='bold')
             
             fig_tech.add_trace(go.Candlestick(x=h_close.index, open=h_open, high=h_high, low=h_low, close=h_close, increasing_line_color='#DEFF9A', decreasing_line_color='#FF4C4C', name="Fiyat"), row=1, col=1)
             colors = ['#DEFF9A' if row['close'] >= row['open'] else '#FF4C4C' for index, row in pd.concat([h_open, h_close], axis=1, keys=['open', 'close']).iterrows()]
@@ -393,22 +382,22 @@ try:
             st.plotly_chart(fig_tech, use_container_width=True, config={'displayModeBar': False})
 
     with tab3:
-        st.markdown("<h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px;'>NLP Haber Okuyucusu ve Karar Motoru</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px;'>🕵️‍♂️ NLP Haber Okuyucusu ve Karar Motoru</h3>", unsafe_allow_html=True)
         col_ai1, col_ai2 = st.columns([2, 1], gap="large")
         
         with col_ai1:
             st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 11px; letter-spacing: 1.5px;'>SEKTÖREL MAKRO TARAMA</p>", unsafe_allow_html=True)
             st.markdown("""
-            <div class="glass-metric-card" style="min-height: auto; padding: 20px; margin-bottom: 20px; border-left: 3px solid #3B82F6;">
-                <h4 style="color: #F5F5F5; margin: 0 0 10px 0; font-size: 16px;">Yeşil Enerji Regülasyonları Bekleniyor</h4>
-                <div style="font-size: 12px; color: #8B949E; margin-bottom: 10px;">
-                    Kaynak: Sovereign Macro AI | Analiz: <span style="background: rgba(59,130,246,0.15); color: #3B82F6; padding: 2px 8px; border-radius: 4px; font-weight: 600;">🔵 BEKLEMEDE (PENDING)</span>
+            <div class="glass-metric-card" style="min-height: auto; padding: 26px 42px; margin-bottom: 20px; border-left: 3px solid #3B82F6;">
+                <h4 style="color: #F5F5F5; margin: 0 0 10px 0; font-size: 18px;">Yeşil Enerji Regülasyonları Bekleniyor</h4>
+                <div style="font-size: 12px; color: #8B949E; margin-bottom: 15px;">
+                    Kaynak: Sovereign Macro AI | Analiz: <span style="background: rgba(59,130,246,0.15); color: #3B82F6; padding: 3px 10px; border-radius: 4px; font-weight: 600;">🔵 BEKLEMEDE (PENDING)</span>
                 </div>
-                <p style="color: #A0ABC0; font-size: 13px; margin: 0; line-height: 1.6;">Yapay zeka motorumuz spesifik hisse haberi bulamadığında otomatik olarak sektörel makro görünüme odaklanır.</p>
+                <p style="color: #A0ABC0; font-size: 13px; margin: 0; line-height: 1.6;">Yapay zeka motorumuz spesifik hisse haberi bulamadığında otomatik olarak sektörel makro görünüme odaklanır. Yeşil enerji yatırımları uzun vadeli destek almaktadır.</p>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 11px; letter-spacing: 1.5px; margin-top:20px;'>GLOBAL MAKRO PUAN (SOVEREIGN GAUGE)</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 11px; letter-spacing: 1.5px; margin-top:30px;'>GLOBAL MAKRO PUAN (SOVEREIGN GAUGE)</p>", unsafe_allow_html=True)
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = 72, title = {'text': "Piyasa Hissiyatı (Sentiment)", 'font': {'color': '#8B949E', 'size': 13}},
                 gauge = {
@@ -432,17 +421,17 @@ try:
                 durum, renk, taktik = "ZIRH KAPALI", "#6B7280", "Trend Kalkanını Açın"
 
             st.markdown(f"""
-            <div class="glass-metric-card" style="height: 100%; border-top: 2px solid {renk}; justify-content: center; text-align: center; min-height: 350px;">
-                <p style="color: #8B949E; font-size: 11px; font-weight: 700; letter-spacing: 2px;">SİSTEM DURUMU</p>
-                <h2 style="color: {renk}; font-size: 28px; font-weight: 800; margin: 20px 0;">{durum}</h2>
-                <hr style="border-color: rgba(255,255,255,0.05); margin: 30px 0;">
-                <p style="color: #8B949E; font-size: 13px; margin-bottom: 10px;">Yapay Zeka Tavsiyesi:</p>
-                <b style="color: #F5F5F5; font-size: 16px;">{taktik}</b>
+            <div class="glass-metric-card" style="height: 100%; border-top: 2px solid {renk}; justify-content: center; text-align: center; min-height: 400px; padding: 42px;">
+                <p style="color: #8B949E; font-size: 11px; font-weight: 600; letter-spacing: 2px;">SİSTEM DURUMU</p>
+                <h2 style="color: {renk}; font-size: 28px; font-weight: 800; margin: 30px 0;">{durum}</h2>
+                <hr style="border-color: rgba(255,255,255,0.05); margin: 40px 0;">
+                <p style="color: #8B949E; font-size: 13px; font-weight: 600; margin-bottom: 10px;">Yapay Zeka Tavsiyesi:</p>
+                <b style="color: #F5F5F5; font-size: 18px;">{taktik}</b>
             </div>
             """, unsafe_allow_html=True)
 
     with tab4:
-        st.markdown("<h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px;'>Kantitatif Risk & Raporlama</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 20px; color: #F5F5F5; font-size: 22px;'>⚖️ Kantitatif Risk & Raporlama</h3>", unsafe_allow_html=True)
         getiriler = close_data[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].pct_change().dropna()
         bist_getiri = close_data['XU100.IS'].pct_change().dropna()
         
@@ -451,7 +440,7 @@ try:
             fon_vol, b_vol, sharpe, sortino, fon_dd, var_95, drawdown_serisi, alpha, beta = SovereignRiskEngine.calculate_metrics(portfoy_getiri, bist_getiri)
 
             risk_cards = f"""
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; margin-bottom: 40px;">
                 <div class="glass-metric-card">
                     <div>
                         <div class="glass-metric-title">Fon Yıllık Volatilite</div>
@@ -462,21 +451,21 @@ try:
                 <div class="glass-metric-card">
                     <div>
                         <div class="glass-metric-title">Maks Düşüş (Drawdown)</div>
-                        <div class="glass-metric-value">% {fon_dd:.2f}</div>
+                        <div class="glass-metric-value" style="color: #FF4C4C;">{fon_dd:.2f}</div>
                     </div>
                     <div class="glass-metric-delta positive">Tarihsel Kriz Direnci</div>
                 </div>
                 <div class="glass-metric-card">
                     <div>
                         <div class="glass-metric-title">Piyasa Betası (Risk)</div>
-                        <div class="glass-metric-value">{beta:.2f}</div>
+                        <div class="glass-metric-value" style="color: {'#FF4C4C' if beta > 1 else '#F5F5F5'};">{beta:.2f}</div>
                     </div>
                     <div class="glass-metric-delta {'positive' if beta < 1 else 'negative'}">1.0 Altı Defansiftir</div>
                 </div>
                 <div class="glass-metric-card">
                     <div>
                         <div class="glass-metric-title">Yaratılan Yıllık Alpha</div>
-                        <div class="glass-metric-value">% {alpha:.2f}</div>
+                        <div class="glass-metric-value" style="color: {'#A3FF00' if alpha > 0 else '#FF4C4C'};">% {alpha:.2f}</div>
                     </div>
                     <div class="glass-metric-delta {'positive' if alpha > 0 else 'negative'}">Fon Yönetim Başarısı</div>
                 </div>
@@ -486,32 +475,31 @@ try:
             
             kor_col1, kor_col2 = st.columns(2, gap="large")
             with kor_col1:
-                st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 12px; margin-bottom:15px;'>FON KORELASYON MATRİSİ (RİSK RADARI)</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 12px; margin-bottom:15px;'>🧩 FON KORELASYON MATRİSİ (RİSK RADARI)</p>", unsafe_allow_html=True)
                 kor_matrisi = getiriler.corr().values
                 
                 fig_corr = go.Figure(data=go.Heatmap(
                     z=kor_matrisi, x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], 
                     colorscale=[[0, '#0F141E'], [0.5, '#1C2433'], [1, '#DEFF9A']], 
-                    showscale=False, hoverinfo='skip' # Genta: Çirkin tooltip i tamamen öldürür.
+                    showscale=False, hoverinfo='skip'
                 ))
                 
-                # Genta: Hücre içindeki rakam renklerini zemin rengine göre matematiksel kontrastla ayarlar.
                 for i in range(len(kor_matrisi)):
                     for j in range(len(kor_matrisi[i])):
                         val = kor_matrisi[i][j]
-                        text_col = '#05070A' if val > 0.7 else '#F5F5F5'
+                        text_col = '#0F141E' if val > 0.7 else '#F5F5F5'
                         fig_corr.add_annotation(
                             x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][j], 
                             y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][i], 
                             text=f"{val:.2f}", showarrow=False, 
-                            font=dict(color=text_col, size=13, family="Inter")
+                            font=dict(color=text_col, size=13, family="Inter", weight="bold")
                         )
 
                 fig_corr.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=20, l=10, r=10), height=320)
                 st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
                 
             with kor_col2:
-                st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 12px; margin-bottom:15px;'>KRİZ DİRENCİ (UNDERWATER / DRAWDOWN)</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #8B949E; font-weight: 700; font-size: 12px; margin-bottom:15px;'>🌊 KRİZ DİRENCİ (UNDERWATER / DRAWDOWN)</p>", unsafe_allow_html=True)
                 fig_dd = go.Figure(go.Scatter(
                     x=drawdown_serisi.index, y=drawdown_serisi, fill='tozeroy', mode='lines', 
                     line=dict(color='#FF4C4C', width=1.5), fillcolor='rgba(255, 76, 76, 0.15)'
@@ -521,8 +509,8 @@ try:
                 st.plotly_chart(fig_dd, use_container_width=True, config={'displayModeBar': False})
 
     with tab5:
-        st.markdown("<h3 style='margin-bottom: 10px; color: #F5F5F5; font-size: 22px;'>Monte Carlo Gelecek Projeksiyonu (1 Yıl)</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #8B949E; font-size: 14px; margin-bottom: 30px;'>Geçmiş getiri ve volatilite kullanılarak önümüzdeki 252 işlem günü için 100 farklı paralel evren simüle edilmiştir.</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 10px; color: #F5F5F5; font-size: 22px;'>🔮 Monte Carlo Gelecek Projeksiyonu (1 Yıl)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 14px; margin-bottom: 30px; line-height: 1.6;'>Geometrik Brownian Hareketi (GBM) kullanılarak, fonun tarihsel volatilitesi (risk) üzerinden önümüzdeki 1 iş yılı (252 gün) için 100 farklı rastgele matematiksel senaryo hesaplanmıştır.</p>", unsafe_allow_html=True)
         
         if len(getiriler) > 0:
             mu, sigma = portfoy_getiri.mean(), portfoy_getiri.std()
@@ -532,7 +520,7 @@ try:
                 
             fig_mc = go.Figure()
             for i in range(100): 
-                fig_mc.add_trace(go.Scatter(y=sim_df[:, i], mode='lines', line=dict(color='rgba(222, 255, 154, 0.08)', width=1), showlegend=False, hoverinfo='skip'))
+                fig_mc.add_trace(go.Scatter(y=sim_df[:, i], mode='lines', line=dict(color='rgba(222, 255, 154, 0.1)', width=1), showlegend=False, hoverinfo='skip'))
             
             fig_mc.add_trace(go.Scatter(y=sim_df.mean(axis=1), mode='lines', name='Beklenen Ortalama', line=dict(color='#F5F5F5', width=3, dash='dash')))
             
