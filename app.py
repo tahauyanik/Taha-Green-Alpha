@@ -11,10 +11,12 @@ st.markdown("""
 /* Karanlık Tema ve Ana Arka Plan */
 .stApp { background-color: #0E1117 !important; }
 
-/* V5.4 KESİN ÇÖZÜM: Header'ı GİZLEME, ŞEFFAF YAP! (Menü açma tuşu kaybolmasın) */
+/* V5.5 SAAS TEMİZLİĞİ: Ucuz İkonları ve Linkleri Yokediyoruz */
+[data-testid="stToolbar"] { visibility: hidden !important; } /* Sağ üstteki Share/Github ikonları GİTTİ */
 header { background-color: transparent !important; }
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
+a.anchor { display: none !important; } /* Başlıkların yanındaki çirkin zincir ikonu GİTTİ */
 
 /* Sidebar Arka Planı ve Çizgisi */
 [data-testid="stSidebar"] {
@@ -22,22 +24,32 @@ footer {visibility: hidden;}
     border-right: 1px solid #2D323C !important;
 }
 
-/* Kusursuz Selectbox (Beyaz Kutu İmhasi) */
-div[data-baseweb="select"] { background-color: #161A22 !important; }
+/* V5.5 KUSURSUZ DROPDOWN: Karanlıkta Kaybolan Yazılar ve Çirkin Kutu Tamiri */
 div[data-baseweb="select"] > div {
     background-color: #161A22 !important;
     color: #F5F5F5 !important;
-    border: 1px solid #DEFF9A !important; 
+    border: 1px solid #2D323C !important; 
     border-radius: 8px !important;
 }
+div[data-baseweb="select"] > div:hover {
+    border: 1px solid #DEFF9A !important; 
+}
 div[data-baseweb="select"] svg { color: #DEFF9A !important; }
-div[role="listbox"], ul[role="listbox"] {
+
+div[data-baseweb="popover"] > div {
     background-color: #161A22 !important;
     border: 1px solid #2D323C !important;
+    border-radius: 8px !important;
 }
-ul[data-testid="stSelectboxVirtualDropdown"] { background-color: #161A22 !important; }
-li[role="option"] { color: #F5F5F5 !important; background-color: #161A22 !important; }
-li[role="option"]:hover { background-color: #2D323C !important; color: #DEFF9A !important; }
+ul[role="listbox"] li {
+    background-color: #161A22 !important;
+    color: #FFFFFF !important; /* YAZILAR ARTIK BEMBEYAZ VE OKUNABİLİR */
+    font-size: 15px !important;
+}
+ul[role="listbox"] li:hover, ul[role="listbox"] li:active, ul[role="listbox"] li[aria-selected="true"] {
+    background-color: #2D323C !important; 
+    color: #DEFF9A !important; /* Seçilen/Hover olan Neon Yeşil */
+}
 
 /* V5.4 KESİN ÇÖZÜM: METRİK KUTULARI (stMetric doğrudan hedeflendi) */
 [data-testid="stMetric"] {
