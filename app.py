@@ -505,17 +505,17 @@ try:
             
             kor_col1, kor_col2 = st.columns(2, gap="large")
             with kor_col1:
-                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px;'>🧩 Fon Korelasyon Matrisi (Risk Radarı)</div>", unsafe_allow_html=True)
+                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px; text-transform:uppercase;'>🧩 Fon Korelasyon Matrisi (Risk Radarı)</div>", unsafe_allow_html=True)
                 kor_matrisi = getiriler.corr().values
                 fig_corr = go.Figure(data=go.Heatmap(
                     z=kor_matrisi, x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], 
-                    colorscale=[[0, '#0A0C12'], [0.5, '#1C2433'], [1, '#DEFF9A']], showscale=False, hoverinfo='skip'
+                    colorscale=[[0, '#0F141E'], [0.5, '#1C2433'], [1, '#DEFF9A']], showscale=False, hoverinfo='skip'
                 ))
                 for i in range(len(kor_matrisi)):
                     for j in range(len(kor_matrisi[i])):
                         val = kor_matrisi[i][j]
                         text_color = '#0A0C12' if val > 0.7 else '#F5F5F5'
-                        fig_corr.add_annotation(x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][j], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][i], text=f"{val:.2f}", showarrow=False, font=dict(color=text_color, size=13, family="Inter", weight="600"))
+                        fig_corr.add_annotation(x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][j], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'][i], text=f"{val:.2f}", showarrow=False, font=dict(color=text_color, size=13, family="Inter", weight="bold"))
                 
                 fig_corr.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=0, r=0), height=340)
                 st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
