@@ -429,7 +429,7 @@ try:
                 number = {'font': {'color': '#F5F5F5', 'size': 55}} # Fibonacci 55
             ))
             fig_gauge = SovereignVisualEngine.apply_card_layout(fig_gauge)
-            fig_gauge.update_layout(title=dict(text="GLOBAL MAKRO HİSSİYAT", font=dict(color='#8B949E', size=11, family="Inter", letter_spacing=1.5), x=0.5, y=0.9), height=280)
+            fig_gauge.update_layout(title=dict(text="GLOBAL MAKRO HİSSİYAT", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.9), height=280)
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
             
         with col_ai4:
