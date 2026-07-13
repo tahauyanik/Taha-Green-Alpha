@@ -224,7 +224,7 @@ class SovereignVisualEngine:
             paper_bgcolor=cls.COLORS['card'],
             plot_bgcolor=cls.COLORS['card'],
             margin=dict(l=30, r=30, t=60, b=30),
-            shape=[dict(type="rect", xref="paper", yref="paper", x0=0, y0=0, x1=1, y1=1, 
+            shapes=[dict(type="rect", xref="paper", yref="paper", x0=0, y0=0, x1=1, y1=1, 
                         line=dict(color="rgba(255,255,255,0.05)", width=1))]
         )
         return fig
