@@ -9,29 +9,27 @@ st.set_page_config(page_title="Taha Uyanık | Green Alpha Quant", layout="wide",
 st.markdown("""
 <style>
 /* Karanlık Tema ve Ana Arka Plan */
-.stApp { background-color: #0B0E14 !important; } /* Daha derin bir uzay siyahı */
+.stApp { background-color: #0E1117 !important; }
 
-/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle */
+/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle (Menü Açma Tuşu Bozulmasın Diye Transparent) */
+header {background-color: transparent !important;}
 #MainMenu {visibility: hidden;}
-header {visibility: hidden;}
 footer {visibility: hidden;}
 
 /* Sidebar Arka Planı ve Çizgisi */
 [data-testid="stSidebar"] {
-    background-color: #10131A !important;
-    border-right: 1px solid #1E222A !important;
+    background-color: #12151B !important;
+    border-right: 1px solid #2D323C !important;
 }
 
-/* Kusursuz Selectbox (Beyaz Kutu İmhasi) */
-div[data-baseweb="select"] { background-color: transparent !important; }
+/* Kusursuz Selectbox (Beyaz Kutu İmhasi ve Yazı Rengi) */
+div[data-baseweb="select"] { background-color: #161A22 !important; }
 div[data-baseweb="select"] > div {
-    background-color: rgba(22, 26, 34, 0.7) !important; /* Yarı Şeffaf Menü */
+    background-color: #161A22 !important;
     color: #F5F5F5 !important;
-    border: 1px solid #2D323C !important; 
+    border: 1px solid #DEFF9A !important; 
     border-radius: 8px !important;
-    backdrop-filter: blur(5px) !important;
 }
-div[data-baseweb="select"] > div:hover { border: 1px solid #DEFF9A !important; }
 div[data-baseweb="select"] svg { color: #DEFF9A !important; }
 div[role="listbox"], ul[role="listbox"] {
     background-color: #161A22 !important;
@@ -43,28 +41,28 @@ li[role="option"]:hover { background-color: #2D323C !important; color: #DEFF9A !
 
 /* V7.0 LINKEDIN ŞOVU: CAM EFEKTİ (GLASSMORPHISM) METRİK KARTLARI */
 div[data-testid="metric-container"], div[data-testid="stMetric"] {
-    background-color: rgba(22, 26, 34, 0.4) !important; /* Şeffaf arka plan */
-    backdrop-filter: blur(10px) !important; /* Cam buğusu */
-    -webkit-backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(222, 255, 154, 0.2) !important; /* İncecik neon sınır */
+    background-color: rgba(26, 30, 38, 0.6) !important; 
+    backdrop-filter: blur(12px) !important; 
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(222, 255, 154, 0.3) !important; 
     padding: 24px !important;
-    border-radius: 16px !important; /* Daha oval köşeler */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; /* Sıçrama animasyonu */
+    border-radius: 16px !important; 
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important; 
 }
 
 div[data-testid="metric-container"]:hover, div[data-testid="stMetric"]:hover {
     transform: translateY(-8px) scale(1.02) !important;
     box-shadow: 0 15px 40px rgba(222, 255, 154, 0.15) !important;
     border: 1px solid #DEFF9A !important;
-    background-color: rgba(22, 26, 34, 0.8) !important;
+    background-color: rgba(26, 30, 38, 0.9) !important;
 }
 
 /* Rakamların Rengi (Neon Yeşil Vurgu) */
 [data-testid="stMetricValue"] > div { color: #DEFF9A !important; font-weight: 900 !important; letter-spacing: 1px !important;}
 
 /* Alt Başlıklar (Okunabilirlik için gümüş/beyaz) */
-[data-testid="stMetricLabel"] > div > div > p { color: #8B949E !important; font-weight: 600 !important; font-size: 15px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;}
+[data-testid="stMetricLabel"] > div > div > p { color: #B0C4DE !important; font-weight: 600 !important; font-size: 15px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;}
 
 /* Delta (Artış/Azalış) Renkleri */
 [data-testid="stMetricDelta"] svg { fill: #A3FF00 !important; }
@@ -73,8 +71,15 @@ div[data-testid="metric-container"]:hover, div[data-testid="stMetric"]:hover {
 /* Yazı Başlıkları ve Etiketleri */
 h1, h2, h3, p, label { color: #F5F5F5 !important; font-family: 'Inter', sans-serif !important;}
 
-/* Slider Renkleri */
+/* Slider Renkleri ve Trend Kalkanı Toggle */
 div[data-baseweb="slider"] div { background-color: #DEFF9A !important; }
+div[data-testid="stWidgetLabel"] p { font-weight: bold !important; color: #F5F5F5 !important; }
+
+/* Streamlit Çöp İkonları Gizle (SaaS Temizliği) */
+.css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob,
+.styles_viewerBadge__1yB5_, .viewerBadge_link__1S137,
+.viewerBadge_text__1JaDK { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -85,7 +90,6 @@ periyot = st.sidebar.selectbox("Zaman Aralığı", ["1mo", "3mo", "6mo", "1y", "
 st.sidebar.markdown("---")
 st.sidebar.markdown("🧠 **Algoritmik Araçlar**")
 
-# Trend Kalkanı (Kullanıcı Seçimi)
 trend_goster = st.sidebar.toggle("Trend Kalkanı (SMA Ayarları)", value=False, help="Kendi belirlediğin hareketli ortalamaları açar.")
 
 sma_kisa = 20
@@ -95,11 +99,9 @@ if trend_goster:
     sma_kisa = st.sidebar.slider("Kısa Vade SMA", min_value=5, max_value=100, value=20, step=1)
     sma_uzun = st.sidebar.slider("Uzun Vade SMA", min_value=10, max_value=250, value=50, step=1)
 
-# YENİ AGRESİF BAŞLIK
 st.title("🌍 Taha Uyanık | Green Alpha Quant Fund")
-st.markdown("*BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatilite ve Alfa Analizi)*")
+st.markdown("BIST100 vs. Katılım Endeksli Yeşil Enerji Algoritması (Volatilite ve Alfa Analizi)")
 
-# GERÇEK MERMİLER (Katılım + Yeşil Enerji Filtresi)
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
 try:
@@ -111,14 +113,12 @@ try:
         
     veri = veri.ffill().bfill() 
     
-    # 0'a bölme kalkanı
     ilk_satir = veri.iloc[0].replace(0, 0.0001)
     normalize_veri = (veri / ilk_satir) * 100
     
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     if trend_goster:
-        # Dinamik SMA hesaplaması
         if len(normalize_veri) >= sma_kisa:
             normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
         if len(normalize_veri) >= sma_uzun:
@@ -133,7 +133,7 @@ try:
         y=normalize_veri['TAHA_YESIL_FON'],
         mode='lines', name='Taha Yeşil Fon',
         line=dict(color='#DEFF9A', width=3),
-        hovertemplate="<b>Tarih:</b> %{x}<br><b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
+        hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
 
     fig.add_trace(go.Scatter(
@@ -141,7 +141,7 @@ try:
         y=normalize_veri['XU100.IS'],
         mode='lines', name='BIST100',
         line=dict(color='#64748B', width=2), 
-        hovertemplate="<b>Tarih:</b> %{x}<br><b>BIST100:</b> %{y:.2f}<extra></extra>"
+        hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
     ))
 
     if trend_goster:
@@ -162,10 +162,17 @@ try:
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-        xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', tickangle=-45, rangeslider=dict(visible=False)),
-        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)'),
-        legend=dict(bgcolor='rgba(11, 14, 20, 0.8)', bordercolor='#2D323C', borderwidth=1, orientation="h", yanchor="top", y=-0.3, xanchor="center", x=0.5, font=dict(color='#FFFFFF', size=13)),
-        margin=dict(l=0, r=0, t=20, b=80), hovermode='x unified',
+        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45, rangeslider=dict(visible=False)),
+        yaxis=dict(showgrid=True, gridcolor='#1E222A'),
+        legend=dict(
+            bgcolor='rgba(22, 26, 34, 0.9)', 
+            bordercolor='#DEFF9A', 
+            borderwidth=1, 
+            orientation="h", 
+            yanchor="top", y=-0.2, xanchor="center", x=0.5, 
+            font=dict(color='#FFFFFF', size=13) 
+        ),
+        margin=dict(l=0, r=0, t=50, b=80), hovermode='x unified',
         hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#FFFFFF", bordercolor="#DEFF9A")
     )
     
@@ -214,7 +221,7 @@ try:
             
             fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.6, marker=dict(colors=colors, line=dict(color='#0B0E14', width=2)))])
             fig_pie.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', # V7.0 JİLET GİBİ ŞEFFAFLIK
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', 
                 font=dict(color='#F5F5F5'), margin=dict(t=20, b=20, l=20, r=20),
                 showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5, font=dict(color='#FFFFFF'))
             )
@@ -234,14 +241,56 @@ try:
             ))
             fig_dd.update_layout(
                 plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-                xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', tickangle=-45),
-                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', title="% Düşüş"),
+                xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45),
+                yaxis=dict(showgrid=True, gridcolor='#1E222A', title="% Düşüş"),
                 margin=dict(t=20, b=20, l=20, r=20), hovermode='x unified',
                 legend=dict(font=dict(color='#FFFFFF'))
             )
             st.plotly_chart(fig_dd, use_container_width=True)
 
         st.markdown("---")
+        
+        st.markdown("### 🧩 Fon Korelasyon Matrisi (Risk Çeşitlendirme Radarı)")
+        st.markdown("Modern Portföy Teorisine (Markowitz) göre, aynı yöne hareket eden hisseler riski artırır. Bu matris, hisselerin birbirleriyle olan matematiksel ilişkisini gösterir. Hedefimiz 1.0'dan küçük, çeşitlendirilmiş bir ağ kurmaktır.")
+        
+        kor_col1, kor_col2 = st.columns([2, 1])
+        
+        with kor_col1:
+            hisse_getirileri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']]
+            hisse_isimleri = ['ALFAS', 'YEOTK', 'ASTOR', 'KCAER']
+            kor_matrisi = hisse_getirileri.corr().values
+            
+            # Zengin görünümlü Isı Haritası
+            fig_corr = go.Figure(data=go.Heatmap(
+                z=kor_matrisi,
+                x=hisse_isimleri,
+                y=hisse_isimleri,
+                colorscale=[[0, '#161A22'], [0.5, '#2E8B57'], [1, '#DEFF9A']], # Karanlıktan Neon Yeşile
+                text=np.round(kor_matrisi, 2),
+                texttemplate="%{text}",
+                textfont={"color": "white", "size": 14},
+                showscale=False # Yan taraftaki çirkin renk barını gizle, temiz dursun
+            ))
+            
+            fig_corr.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#F5F5F5'),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=False, autorange='reversed'), # Isı haritası standart görünüm
+                margin=dict(t=20, b=20, l=20, r=20)
+            )
+            st.plotly_chart(fig_corr, use_container_width=True)
+            
+        with kor_col2:
+            st.info("💡 **Müşteri İçgörüsü (AI Yorumu):**")
+            st.markdown("""
+            * **Renk Skalası:** Koyu renkler hisselerin bağımsız hareket ettiğini (iyi çeşitlendirme), **Neon Yeşil (1.0)** ise hisselerin tamamen aynı yöne gittiğini gösterir.
+            * Aynı sektördeki hisseler (ör: YEOTK ve ASTOR) genelde daha yüksek korelasyona sahiptir.
+            * KCAER'in diğer enerji şirketlerine kıyasla daha farklı bir hareket sergilemesi, olası krizlerde portföyün şok emici (amortisman) gücünü artırır.
+            """)
+
+        st.markdown("---")
+        
         st.markdown("### 🔮 Yapay Zeka Monte Carlo Simülasyonu (1 Yıllık Gelecek Projeksiyonu)")
         st.markdown("Geçmiş volatilite ve getiri metrikleri kullanılarak **önümüzdeki 252 işlem günü (1 Yıl)** için 100 farklı rastgele piyasa senaryosu simüle edilmiştir. Başlangıç: **100.000 TL**")
         
@@ -265,7 +314,7 @@ try:
             fig_mc.add_trace(go.Scatter(
                 y=simulasyon_df[:, i],
                 mode='lines',
-                line=dict(color='rgba(222, 255, 154, 0.08)', width=1), # Neon Yeşil Şeffaf Çizgiler
+                line=dict(color='rgba(222, 255, 154, 0.05)', width=1), 
                 showlegend=False,
                 hoverinfo='skip'
             ))
@@ -278,15 +327,14 @@ try:
             line=dict(color='#FF1493', width=3, dash='dash'), 
         ))
         
-        # V7.0: MONTE CARLO UX OVERHAUL (Şeffaf Zemin, Okunabilir Eksenler)
         fig_mc.update_layout(
             plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-            xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', title="Gelecek Günler (1 Yıl)"),
-            yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', title="Sermaye Büyüklüğü (TL)", tickformat=",.0f"),
+            xaxis=dict(showgrid=True, gridcolor='#1E222A', title="Gelecek Günler (1 Yıl)"),
+            yaxis=dict(showgrid=True, gridcolor='#1E222A', title="Sermaye Büyüklüğü (TL)", tickformat=",.0f"),
             margin=dict(t=20, b=20, l=20, r=20), hovermode='x unified',
             legend=dict(
-                bgcolor='rgba(11, 14, 20, 0.8)', 
-                bordercolor='#2D323C', 
+                bgcolor='rgba(22, 26, 34, 0.9)', 
+                bordercolor='#DEFF9A', 
                 borderwidth=1, 
                 orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
                 font=dict(color='#FFFFFF') 
