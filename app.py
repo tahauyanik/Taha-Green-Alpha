@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from datetime import datetime, timedelta
 
 st.set_page_config(
     page_title="Sovereign Quant | Taha Uyanık", 
@@ -35,7 +36,6 @@ a { pointer-events: none; cursor: default; text-decoration: none !important; }
 [data-testid="collapsedControl"] { display: none !important; }
 section[data-testid="stSidebar"] { display: none !important; }
 
-/* HIZLANDIRILMIŞ TAB VE KART CSS'LERİ (GPU Donanım Hızlandırması Eklendi) */
 .stTabs [data-baseweb="tab-list"] {
     gap: 34px; background-color: transparent !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding-bottom: 0px;
@@ -70,6 +70,7 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
     border-top: 1px solid rgba(222, 255, 154, 0.5);
     box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(222, 255, 154, 0.05);
 }
+
 .glass-metric-title {
     color: #8B949E; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
 }
@@ -81,7 +82,6 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 .glass-metric-delta.negative { color: #FF4C4C; }
 .glass-metric-delta.neutral { color: #A0ABC0; }
 
-/* PALANTIR TERMİNAL TASARIMI (AI Sekmesi İçin) */
 .terminal-card {
     background: #0A0C12; border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 12px; padding: 34px; position: relative;
@@ -95,7 +95,7 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 }
 .terminal-font { font-family: 'JetBrains Mono', monospace; }
 
-/* Selectbox, Input ve Arayüz Kontrolleri */
+/* Selectbox, Input ve Tablolar */
 .stSelectbox div[data-baseweb="select"] > div, .stNumberInput > div > div > input {
     background-color: #0A0C12 !important; color: #F5F5F5 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important;
@@ -104,16 +104,12 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 .stSelectbox div[data-baseweb="popover"] { background-color: #0A0C12 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
 .stSelectbox li { background-color: transparent !important; color: #F5F5F5 !important; }
 .stSelectbox li:hover { background-color: rgba(222, 255, 154, 0.1) !important; color: #DEFF9A !important; }
-
-/* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: #030407; }
 ::-webkit-scrollbar-thumb { background: #1C212B; border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: #3B82F6; }
 h1, h2, h3, p, span { color: #F5F5F5; }
 hr { border-color: rgba(255,255,255,0.05) !important; }
-
-/* Dark Pool Table Estetiği */
 .dark-pool-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .dark-pool-table th { color: #8B949E; text-align: left; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; text-transform: uppercase;}
 .dark-pool-table td { color: #D1D5DB; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.02); }
@@ -133,23 +129,19 @@ class SovereignDataEngine:
     
     @staticmethod
     def calculate_technical_indicators(close_prices, volume):
-        # RSI
         delta = close_prices.diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
         
-        # MACD
         exp1 = close_prices.ewm(span=12, adjust=False).mean()
         exp2 = close_prices.ewm(span=26, adjust=False).mean()
         macd = exp1 - exp2
         signal_line = macd.ewm(span=9, adjust=False).mean()
         
-        # OBV (On-Balance Volume)
         obv = (np.sign(delta) * volume).fillna(0).cumsum()
         
-        # Bollinger Bantları
         sma_20 = close_prices.rolling(window=20).mean()
         std_20 = close_prices.rolling(window=20).std()
         upper_band = sma_20 + (std_20 * 2.1)
@@ -164,7 +156,7 @@ class SovereignDataEngine:
             current_rsi = rsi_series.iloc[-1].mean()
             macd_hist = (macd_series.iloc[-1] - macd_series.iloc[-2]).mean()
             
-            # RSI bazlı skor (0-100)
+            # RSI bazlı skor (0-100 arası normalize)
             base_score = current_rsi 
             
             # MACD momentum katkısı
@@ -173,15 +165,14 @@ class SovereignDataEngine:
             elif macd_hist < 0:
                 base_score -= 10
                 
-            # Sınırlandırma
             final_score = max(0, min(100, base_score))
             return int(final_score)
         except:
-            return 50 # Veri hatasında nötr dön.
+            return 50 # Veri yetersizse nötr
 
     @staticmethod
     def detect_volume_anomalies(volume_data, close_data):
-        """Gerçek Hacim verisi ile Kurumsal (Balina) İzlerini tarar (Honest Dark Pool alternative)"""
+        """Gerçek Hacim verisi ile Kurumsal (Balina) İzlerini tarar"""
         anomalies = []
         for ticker in volume_data.columns:
             if ticker == 'XU100.IS': continue # Endeksi atla
@@ -216,31 +207,26 @@ class SovereignRiskEngine:
         annual_volatility = returns.std() * np.sqrt(252) * 100
         bench_volatility = benchmark_returns.std() * np.sqrt(252) * 100
         
-        # Beta & Alpha
         cov_matrix = np.cov(returns, benchmark_returns)
         beta = cov_matrix[0, 1] / cov_matrix[1, 1] if cov_matrix[1, 1] > 0 else 1
         port_ann_return = returns.mean() * 252
         bench_ann_return = benchmark_returns.mean() * 252
         alpha = (port_ann_return - (risk_free_rate + beta * (bench_ann_return - risk_free_rate))) * 100
         
-        # Sortino
         excess_returns = returns - rf_daily
         negative_returns = excess_returns[excess_returns < 0]
         downside_deviation = negative_returns.std() * np.sqrt(252)
         sortino_ratio = (excess_returns.mean() * 252) / downside_deviation if downside_deviation > 0 else 0
         
-        # Drawdown & Calmar
         cumulative = (1 + returns).cumprod()
         peak = cumulative.cummax()
         drawdown = ((cumulative - peak) / peak) * 100
         max_dd = drawdown.min()
         calmar_ratio = (port_ann_return * 100) / abs(max_dd) if abs(max_dd) > 0 else 0
         
-        # Information Ratio
         tracking_error = (returns - benchmark_returns).std() * np.sqrt(252)
         info_ratio = (port_ann_return - bench_ann_return) / tracking_error if tracking_error > 0 else 0
         
-        # VaR & CVaR (Historical)
         var_95 = np.percentile(returns.dropna() * 100, 5)
         cvar_95 = returns.dropna()[returns.dropna() * 100 <= var_95].mean() * 100
         
@@ -277,7 +263,7 @@ class SovereignVisualEngine:
 st.markdown("""
 <div style='margin-bottom: 10px; margin-top: 15px;'>
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
-        🌍 Taha Uyanık <span style='color: #2D323C; font-weight:300;'>|</span> Sovereign Quant
+        🌍 Taha Uyanık <span style='color: #2D323C; font-weight:300;'>|</span> Sovereign Quant Fund
     </h1>
     <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kantitatif Risk Motoru & Hacim Radarı (Katılım Finansı Menkul Kıymetleri)</p>
 </div>
@@ -292,13 +278,13 @@ with st.container():
         periyot = st.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"], index=3, label_visibility="collapsed")
     with ctrl_col2:
         st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px; text-transform:uppercase;'>Algoritmik Zırhlar</p>", unsafe_allow_html=True)
-        trend_goster = st.checkbox("MOMENTUM & MACRO TREND", value=True)
-        bollinger_goster = st.checkbox("VOLATILITY BANDS (Bollinger)", value=False)
+        trend_goster = st.checkbox("MOMENTUM SIGNAL (FAST-EMA)", value=True)
+        bollinger_goster = st.checkbox("VOLATILITY BANDS (Bollinger)", value=True)
     with ctrl_col3:
-        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px; text-transform:uppercase;'>Momentum Sinyali (Hızlı)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px; text-transform:uppercase;'>Momentum Period</p>", unsafe_allow_html=True)
         sma_kisa = st.slider("Hızlı", 5, 100, 20, label_visibility="collapsed") if trend_goster else 20
     with ctrl_col4:
-        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px; text-transform:uppercase;'>Macro Trend (Yavaş)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px; text-transform:uppercase;'>Macro Trend Period</p>", unsafe_allow_html=True)
         sma_uzun = st.slider("Yavaş", 10, 250, 50, label_visibility="collapsed") if trend_goster else 50
 
 st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 15px; margin-bottom: 25px;'>", unsafe_allow_html=True)
@@ -316,7 +302,7 @@ try:
         normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
         normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
 
-    # Gerçek Sentiment ve Anomali verilerini hesapla
+    # Gerçek Veriye Dayalı Sentiment ve Anomali
     real_rsi, real_macd, _, _, _, _, _ = SovereignDataEngine.calculate_technical_indicators(close_data[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']], vol_data[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']])
     sentiment_score = SovereignDataEngine.calculate_real_sentiment(real_rsi, real_macd, close_data)
     anomalies = SovereignDataEngine.detect_volume_anomalies(vol_data, close_data)
@@ -329,14 +315,12 @@ try:
         st.markdown("<h3 style='margin: 21px 0 21px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>Fon Performans Kıyaslaması</h3>", unsafe_allow_html=True)
         fig = go.Figure()
         
-        # Alan Grafiği
         fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['TAHA_YESIL_FON'], mode='lines', name='Sovereign Yeşil Fon', 
                                  line=dict(color=SovereignVisualEngine.COLORS['fund'], width=2.5), 
                                  fill='tozeroy', fillcolor='rgba(222, 255, 154, 0.03)'))
         fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['XU100.IS'], mode='lines', name='BIST100 Endeksi', 
                                  line=dict(color=SovereignVisualEngine.COLORS['bist'], width=1.5)))
         
-        # Zırhlar (Aynı anda açılabilir)
         if bollinger_goster:
             std_fon = normalize_veri['TAHA_YESIL_FON'].rolling(window=20).std()
             sma_20_fon = normalize_veri['TAHA_YESIL_FON'].rolling(window=20).mean()
@@ -395,7 +379,7 @@ try:
         if bollinger_goster:
             fig_tech.add_trace(go.Scatter(x=h_close.index, y=upper_bb, line=dict(color='rgba(59, 130, 246, 0.3)', width=1), name="Upper BB", hoverinfo='skip'), row=1, col=1)
             fig_tech.add_trace(go.Scatter(x=h_close.index, y=lower_bb, line=dict(color='rgba(59, 130, 246, 0.3)', width=1), fill='tonexty', fillcolor='rgba(59, 130, 246, 0.05)', name="Lower BB", hoverinfo='skip'), row=1, col=1)
-        
+            
         if trend_goster:
              fig_tech.add_trace(go.Scatter(x=h_close.index, y=ind_sma_20, line=dict(color='rgba(255,255,255,0.2)', width=1, dash='dot'), name="SMA 20", hoverinfo='skip'), row=1, col=1)
         
@@ -436,10 +420,10 @@ try:
                     </div>
                 </div>
                 <p class="terminal-font" style="color: #A0ABC0; font-size: 12px; margin: 0; line-height: 1.7;">
-                    > Sistem, portföydeki hisselerin RSI, MACD ve Hacim anomalilerini tarıyor.<br>
-                    > Herhangi bir sahte veya hardcoded veri içermez. %100 saf matematik.<br>
-                    > Tespit edilen Hacim Şokları sağdaki radara yansıtılmıştır.<br>
-                    > Bu panel, katılım endeksi kurallarına uygun teknik analiz sunar.
+                    > Sistem, portföydeki hisselerin anlık RSI, MACD ve Hacim anomalilerini tarıyor.<br>
+                    > Herhangi bir sahte veya 'hardcoded' veri içermez. %100 saf kuantitatif matematik.<br>
+                    > Tespit edilen Hacim Şokları sağdaki radara anlık yansıtılmıştır.<br>
+                    > Bu panel, katılım endeksi kurallarına uygun nicel analiz sunar.
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -486,7 +470,6 @@ try:
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
             
         with col_ai4:
-            # Gerçek Hacim Anomalilerini Tabloya Yazdırma
             table_html = """
             <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
                 <div class="glass-metric-title" style="margin-bottom: 16px;">[GERÇEK ZAMANLI] Hacim Anomalisi Tarayıcısı (Balina İzi)</div>
@@ -587,7 +570,7 @@ try:
 
     with tab5:
         st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🔮 Geometrik Brownian Hareketi (Monte Carlo 1 Yıl)</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Mevcut fon volatilitesi (σ) ve beklenen getiri (μ) kullanılarak önümüzdeki 252 işlem günü için 100 farklı rassal senaryo simüle edilmiştir. (Geometrik Brownian Hareketi Algoritması ile %100 Matematiksel Modellenmiştir.)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Mevcut fon volatilitesi (σ) ve beklenen getiri (μ) kullanılarak önümüzdeki 252 işlem günü için 100 farklı rassal senaryo simüle edilmiştir. %5 ve %95 güven aralıkları gölgelendirilmiştir.</p>", unsafe_allow_html=True)
         
         if len(getiriler) > 0:
             mu, sigma = portfoy_getiri.mean(), portfoy_getiri.std()
