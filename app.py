@@ -45,6 +45,12 @@ a { pointer-events: none; cursor: default; text-decoration: none !important; }
     box-shadow: 0 0 15px rgba(222, 255, 154, 0.3) !important; 
 }
 
+/* Sidebar Toggle Fix */
+[data-testid="stSidebarNav"] { display: none !important; }
+section[data-testid="stSidebar"] {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s !important;
+}
+
 .stTabs [data-baseweb="tab-list"] {
     gap: 34px; background-color: transparent !important; /* Fibonacci 34 */
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding-bottom: 0px;
@@ -229,6 +235,11 @@ class SovereignVisualEngine:
         )
         return fig
 
+if 'trend_kalkani' not in st.session_state: 
+    st.session_state.trend_kalkani = True
+if 'bollinger_kalkani' not in st.session_state: 
+    st.session_state.bollinger_kalkani = False
+
 st.sidebar.markdown("<h3 style='font-weight: 800; margin-bottom: 0; font-size:16px; color: #F5F5F5; letter-spacing: 0.5px;'>⚙️ Kontrol Paneli</h3>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 2px;'>V21.0 APEX ELITE ENGINE</p>", unsafe_allow_html=True)
 
@@ -238,12 +249,9 @@ periyot = st.sidebar.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"
 st.sidebar.markdown("<hr style='margin: 34px 0;'>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600;'>🧠 Algoritmik Araçlar</p>", unsafe_allow_html=True)
 
-# Otomatik Açık Gelen Zırhlı SMA Şalteri
-if 'trend_kalkani' not in st.session_state: st.session_state.trend_kalkani = True
-if 'bollinger_kalkani' not in st.session_state: st.session_state.bollinger_kalkani = False
+trend_goster = st.sidebar.checkbox("Algoritmik Trend (SMA)", value=st.session_state.trend_kalkani, key="trend_toggle")
+bollinger_goster = st.sidebar.checkbox("Volatilite Zırhı (Bollinger)", value=st.session_state.bollinger_kalkani, key="bollinger_toggle")
 
-trend_goster = st.sidebar.toggle("Algoritmik Trend (SMA)", value=st.session_state.trend_kalkani)
-bollinger_goster = st.sidebar.toggle("Volatilite Zırhı (Bollinger)", value=st.session_state.bollinger_kalkani)
 st.session_state.trend_kalkani = trend_goster
 st.session_state.bollinger_kalkani = bollinger_goster
 
