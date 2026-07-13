@@ -5,10 +5,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import datetime
-import scipy.stats as stats
 
 st.set_page_config(
-    page_title="Sovereign Quant | V13.0 Quantum", 
+    page_title="Sovereign Quant | V13.1 Quantum", 
     page_icon="🌍", 
     layout="wide", 
     initial_sidebar_state="expanded"
@@ -183,7 +182,7 @@ class SovereignRiskEngine:
         drawdown = ((cumulative - peak) / peak) * 100
         max_dd = drawdown.min()
         
-        # Value at Risk (VaR 95%) - Tarihsel
+        # Value at Risk (VaR 95%) - Tarihsel (Numpy ile çözüldü, Scipy hatası bitti)
         var_95 = np.percentile(returns.dropna() * 100, 5)
         
         return annual_volatility, sharpe_ratio, sortino_ratio, max_dd, var_95, drawdown
@@ -217,7 +216,7 @@ class SovereignVisualEngine:
 
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png", width=60)
 st.sidebar.markdown("<h2 style='color: #F5F5F5; font-weight: 800; margin-bottom: 0;'>Sovereign Terminal</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color: #A0ABC0; font-size: 13px; margin-top: 0;'>V13.0 Quantum Architecture</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #A0ABC0; font-size: 13px; margin-top: 0;'>V13.1 Quantum Architecture</p>", unsafe_allow_html=True)
 st.sidebar.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 
 st.sidebar.markdown("### ⚙️ Zaman Makinesi")
@@ -238,9 +237,8 @@ if trend_goster:
     sma_kisa = st.sidebar.slider("Kısa Vade (Hızlı Trend)", 5, 100, 20)
     sma_uzun = st.sidebar.slider("Uzun Vade (Ana Trend)", 10, 250, 50)
 
-# Ana Başlıklar
-st.markdown("<h1 style='font-size: 42px; letter-spacing: -1.5px;'>🌍 Taha Uyanık <span style='color: #2D323C;'>|</span> <span style='color: #DEFF9A;'>Quantum Supreme</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #A0ABC0; font-size: 16px; margin-bottom: 30px;'>Yapay Zeka Destekli, Algoritmik Yeşil Enerji Portföy Yönetim Motoru (V13.0 - Hedge Fund Edition)</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='font-size: 42px; letter-spacing: -1.5px;'>🌍 Taha Uyanık <span style='color: #2D323C;'>|</span> <span style='color: #DEFF9A;'>Ultra Premium Quant Fund</span></h1>", unsafe_allow_html=True)
+st.markdown("<p style='color: #A0ABC0; font-size: 16px; margin-bottom: 30px;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V13.1 TITAN)</p>", unsafe_allow_html=True)
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
@@ -270,12 +268,12 @@ try:
     tab1, tab2, tab3, tab4 = st.tabs([
         "📈 Algoritmik Terminal", 
         "🔬 Röntgen (Derin Analiz)", 
-        "🧠 AI İstihbarat & Makro", 
+        "🧠 AI İstihbarat Sinyalleri", 
         "🧩 Kuantum Risk & Monte Carlo"
     ])
 
     with tab1:
-        st.markdown("<h3 style='margin-bottom: 20px;'>📊 Fon Performans Matrixi</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 20px;'>📊 Fon Performans Kıyaslaması</h3>", unsafe_allow_html=True)
 
         fig = go.Figure()
         
@@ -309,7 +307,6 @@ try:
             legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5, font=dict(color='#FFFFFF')),
             height=500
         )
-        # Sağ üstteki çirkin ikonları tamamen kapatıyoruz
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}) 
 
         st.markdown("<br><h3 style='margin-bottom: 20px;'>💰 100.000 TL Performans Simülasyonu</h3>", unsafe_allow_html=True)
@@ -319,12 +316,12 @@ try:
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Klasik BIST100 Getirisi", f"{bist_sonuc:,.0f} ₺", delta="Referans Endeks", delta_color="off")
-        col2.metric("Sovereign Fon Getirisi", f"{yesil_sonuc:,.0f} ₺", delta=f"{((yesil_sonuc-100000)/100000)*100:.1f}% Büyüme")
-        col3.metric("Yaratılan ALFA (Saf Kâr)", f"{fark:+,.0f} ₺", delta="Piyasayı Yendi" if fark > 0 else "Piyasaya Yenildi")
+        col2.metric("Taha Yeşil Fon Getirisi", f"{yesil_sonuc:,.0f} ₺", delta=f"{((yesil_sonuc-100000)/100000)*100:.1f}% Fon Büyümesi")
+        col3.metric("Yaratılan ALFA (Ekstra Kâr)", f"{fark:+,.0f} ₺", delta="Piyasayı Yendi" if fark > 0 else "Piyasaya Yenildi")
 
     with tab2:
         st.markdown("<h3 style='margin-bottom: 20px;'>🔬 Teknik Analiz ve İndikatör Röntgeni</h3>", unsafe_allow_html=True)
-        secili_hisse = st.selectbox("İncelenecek Hisseyi Seçin (Zifiri Karanlık Zırh Aktif)", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'])
+        secili_hisse = st.selectbox("İncelenecek Hisseyi Seçin", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'])
         
         if secili_hisse:
             h_close = close_data[secili_hisse]
@@ -338,7 +335,7 @@ try:
             fig_tech = make_subplots(
                 rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.04, 
                 row_heights=[0.5, 0.15, 0.15, 0.2], 
-                subplot_titles=(f"{secili_hisse} Hareketi", "İşlem Hacmi", "RSI (Göreceli Güç)", "MACD Histogram")
+                subplot_titles=(f"{secili_hisse} Fiyat Hareketi", "İşlem Hacmi", "RSI (Göreceli Güç)", "MACD")
             )
             
             # Candlestick
@@ -360,25 +357,24 @@ try:
             
             fig_tech = SovereignVisualEngine.apply_premium_layout(fig_tech)
             fig_tech.update_layout(height=850, showlegend=False, xaxis_rangeslider_visible=False)
-            # Alt eksendeki tarih yazılarının başlıklarla karışmasını engelleme (Önceki hatanın çözümü)
             fig_tech.update_layout(margin=dict(l=20, r=20, t=40, b=40))
             
             st.plotly_chart(fig_tech, use_container_width=True, config={'displayModeBar': False})
 
     with tab3:
-        st.markdown("<h3 style='margin-bottom: 20px;'>🕵️‍♂️ NLP Haber Analizi ve Karar Motoru</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 20px;'>🕵️‍♂️ NLP Haber Okuyucusu ve Karar Motoru</h3>", unsafe_allow_html=True)
         col_ai1, col_ai2 = st.columns([2, 1])
         
         with col_ai1:
             st.markdown("<p style='color: #8B949E; font-weight: 600;'>Sektörel Makro Tarama</p>", unsafe_allow_html=True)
             st.markdown(f"""
             <div class="ai-signal-card">
-                <div class="ai-title">Kuantum Ağları Analizi: Yeşil Enerji Regülasyonları Bekleniyor</div>
+                <div class="ai-title">Yeşil Enerji Regülasyonları Bekleniyor</div>
                 <div style="margin-bottom: 15px;">
                     <span style="color: #A0ABC0; font-size: 13px;">Kaynak: Sovereign Macro AI</span> | 
                     <span class="ai-badge">🔵 BEKLEMEDE (PENDING)</span>
                 </div>
-                <p class="ai-desc">Yapay zeka motorumuz hisse bazlı son 24 saatte kritik bir başlık bulamadığında, portföyün DNA'sını korumak için otomatik olarak Global Makro (Faiz, Enflasyon, Regülasyon) görünümüne odaklanır.</p>
+                <p class="ai-desc">Yapay zeka motorumuz spesifik hisse haberi bulamadığında otomatik olarak sektörel makro görünüme odaklanır.</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -400,28 +396,28 @@ try:
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
 
         with col_ai2:
-            st.markdown("<p style='color: #8B949E; font-weight: 600;'>🤖 Algoritmik Taktik Emirleri</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #8B949E; font-weight: 600;'>🤖 Algoritmik Taktik</p>", unsafe_allow_html=True)
             son_fiyat = normalize_veri['TAHA_YESIL_FON'].iloc[-1]
             if trend_goster and f'SMA_{sma_uzun}' in normalize_veri.columns:
                 sma_d = normalize_veri[f'SMA_{sma_uzun}'].iloc[-1]
                 if son_fiyat > sma_d * 1.10: durum, renk, taktik = "AŞIRI ALIM (RİSK)", "#F59E0B", "Kâr Al / Nakite Geç"
                 elif son_fiyat > sma_d: durum, renk, taktik = "GÜÇLÜ TREND", "#DEFF9A", "Pozisyonu Koru (Hold)"
-                else: durum, renk, taktik = "DÜŞÜŞ / FIRSAT", "#FF4C4C", "Destek Bekle / Kademeli Topla"
+                else: durum, renk, taktik = "DÜŞÜŞ FIRSATI", "#FF4C4C", "Kademeli Topla"
             else:
                 durum, renk, taktik = "BEKLEMEDE", "#3B82F6", "Trend Kalkanını Aktif Edin"
 
             st.markdown(f"""
             <div style="background: rgba(18, 23, 33, 0.6); backdrop-filter: blur(10px); padding: 40px 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); text-align: center; height: 100%;">
-                <p style="color: #A0ABC0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">MEVCUT PİYASA REJİMİ</p>
+                <p style="color: #A0ABC0; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">SİSTEM DURUMU</p>
                 <h2 style="color: {renk}; font-size: 28px; margin: 20px 0; font-weight: 800; letter-spacing: -1px;">{durum}</h2>
                 <hr style="border-color: rgba(255,255,255,0.05); margin: 30px 0;">
-                <p style="color: #8B949E; font-size: 13px;">Yapay Zeka Tavsiyesi:</p>
+                <p style="color: #8B949E; font-size: 13px;">Tavsiye:</p>
                 <b style="color: #F5F5F5; font-size: 18px;">{taktik}</b>
             </div>
             """, unsafe_allow_html=True)
 
     with tab4:
-        st.markdown("<h3 style='margin-bottom: 20px;'>⚖️ Kantitatif Risk & Raporlama (Hedge Fund Metrikleri)</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom: 20px;'>⚖️ Kantitatif Risk & Raporlama</h3>", unsafe_allow_html=True)
         getiriler = close_data.pct_change().dropna()
         
         if len(getiriler) > 0:
@@ -430,13 +426,12 @@ try:
             
             # Risk Motorunu Çalıştır
             fon_vol, sharpe, sortino, fon_dd, var_95, drawdown_serisi = SovereignRiskEngine.calculate_metrics(portfoy_getiri)
-            bist_vol = bist_getiri.std() * np.sqrt(252) * 100
 
             r_col1, r_col2, r_col3, r_col4 = st.columns(4)
-            r_col1.metric("Sovereign Fon Volatilite", f"%{fon_vol:.2f}", delta=f"BIST Vol: %{bist_vol:.2f}", delta_color="off")
+            r_col1.metric("Fon Yıllık Volatilite", f"%{fon_vol:.2f}", delta="Dalgalanma Boyutu", delta_color="off")
             r_col2.metric("Maksimum Düşüş (Drawdown)", f"%{fon_dd:.2f}", delta="Tarihsel Kriz Direnci", delta_color="off")
             r_col3.metric("Sortino Oranı (Risk Ayarlı)", f"{sortino:.2f}", delta="1.0 Üzeri Mükemmel", delta_color="normal" if sortino > 0 else "inverse")
-            r_col4.metric("Günlük VaR (%95 Güven)", f"%{var_95:.2f}", delta="1 Günde Max Olası Kayıp", delta_color="inverse")
+            r_col4.metric("Günlük VaR (%95 Güven)", f"%{var_95:.2f}", delta="1 Günde Beklenen Maks Kayıp", delta_color="inverse")
             
             st.markdown("<hr style='margin: 30px 0;'>", unsafe_allow_html=True)
             
@@ -475,7 +470,7 @@ try:
                 st.plotly_chart(fig_dd, use_container_width=True, config={'displayModeBar': False})
 
             st.markdown("<hr style='margin: 30px 0;'>", unsafe_allow_html=True)
-            st.markdown("<h3 style='margin-bottom: 20px;'>🔮 Kuantum Monte Carlo Projeksiyonu (1 Yıl)</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='margin-bottom: 20px;'>🔮 Monte Carlo Gelecek Projeksiyonu (1 Yıl)</h3>", unsafe_allow_html=True)
             
             # Monte Carlo Matematik Motoru
             mu, sigma = portfoy_getiri.mean(), portfoy_getiri.std()
@@ -493,10 +488,6 @@ try:
             ortalama_senaryo = sim_df.mean(axis=1)
             fig_mc.add_trace(go.Scatter(y=ortalama_senaryo, mode='lines', name='Beklenen Ortalama', line=dict(color='#3B82F6', width=3, dash='dash')))
             
-            # %95 İyimser ve %5 Karamsar Çizgiler
-            fig_mc.add_trace(go.Scatter(y=np.percentile(sim_df, 95, axis=1), mode='lines', name='İyimser (%95)', line=dict(color='#DEFF9A', width=2, dash='dot')))
-            fig_mc.add_trace(go.Scatter(y=np.percentile(sim_df, 5, axis=1), mode='lines', name='Karamsar (%5)', line=dict(color='#FF4C4C', width=2, dash='dot')))
-
             fig_mc = SovereignVisualEngine.apply_premium_layout(fig_mc)
             fig_mc.update_layout(
                 height=550, 
@@ -507,4 +498,4 @@ try:
             st.plotly_chart(fig_mc, use_container_width=True, config={'displayModeBar': False})
 
 except Exception as e:
-    st.error(f"Kuantum Motoru Kritik Bir Hata Yakaladı: {e}")
+    st.error(f"Sistem Kritik Bir Hata Yakaladı: {e}")
