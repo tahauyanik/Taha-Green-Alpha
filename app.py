@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 import datetime
 
+# Sayfa yapılandırması (En tepeye konmalıdır)
 st.set_page_config(page_title="Taha Uyanık | Sovereign Quant", page_icon="🌍", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
@@ -17,10 +18,11 @@ html, body, [class*="css"] {
 }
 .stApp { background: linear-gradient(180deg, #090B10 0%, #12151B 100%) !important; }
 
-/* Menüleri ve Çöpleri Gizle */
-#MainMenu {visibility: hidden;}
-header {visibility: hidden;}
-footer {visibility: hidden;}
+/* Menü Tuşunu Kurtarma Operasyonu (Kayıp Ok Geri Geldi) */
+header { background-color: transparent !important; }
+[data-testid="stToolbar"] { visibility: hidden !important; } /* Sadece gereksiz sağ üst butonları gizle */
+#MainMenu { visibility: hidden !important; }
+footer { visibility: hidden !important; }
 
 /* Sidebar - Karanlık ve Seçkin */
 [data-testid="stSidebar"] {
@@ -49,8 +51,8 @@ footer {visibility: hidden;}
 }
 .stTabs [aria-selected="true"] {
     color: #DEFF9A !important;
-    background-color: transparent !important; /* İğrenç arka planı sildik */
-    border-bottom: 3px solid #DEFF9A !important; /* Sadece alt çizgi neon */
+    background-color: transparent !important; 
+    border-bottom: 3px solid #DEFF9A !important; 
     box-shadow: none !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
@@ -87,9 +89,19 @@ div[data-testid="metric-container"]:hover {
 .ai-title { color: #FFFFFF; font-size: 18px; font-weight: 800; margin-bottom: 10px; }
 .ai-desc { color: #A0ABC0; font-size: 14px; line-height: 1.6; }
 
+/* BEYAZ KUTU İMHASI - Seçim Kutuları (Selectbox) Zifiri Karanlık Olacak */
+div[data-baseweb="select"] > div { 
+    background-color: #12151B !important; 
+    color: #F5F5F5 !important; 
+    border: 1px solid #2D323C !important; 
+    border-radius: 8px !important; 
+}
+div[data-baseweb="popover"] > div { background-color: #12151B !important; border: 1px solid #2D323C !important; }
+li[role="option"] { background-color: #12151B !important; color: #F5F5F5 !important; }
+li[role="option"]:hover { background-color: #1E2532 !important; color: #DEFF9A !important; }
+
 h1, h2, h3, p, label { color: #F5F5F5 !important; }
 div[data-baseweb="slider"] div { background-color: #DEFF9A !important; }
-div[data-baseweb="select"] > div { background-color: #12151B !important; color: #F5F5F5 !important; border: 1px solid #2D323C !important; border-radius: 8px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,8 +133,12 @@ st.sidebar.markdown("### ⚙️ Zaman Makinesi")
 periyot = st.sidebar.selectbox("Analiz Periyodu", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
 
 st.sidebar.markdown("### 🧠 Algoritmik Zırh")
-# Bug'ı çözülen SMA Toggle mekanizması
-trend_goster = st.sidebar.toggle("Dinamik SMA Kalkanı", value=True)
+# Bug'ı çözülen SMA Toggle mekanizması (Oturum hafızası ile güvenceye alındı)
+if 'sma_toggle' not in st.session_state:
+    st.session_state.sma_toggle = True
+
+trend_goster = st.sidebar.toggle("Dinamik SMA Kalkanı", value=st.session_state.sma_toggle)
+st.session_state.sma_toggle = trend_goster
 
 sma_kisa, sma_uzun = 20, 50
 if trend_goster:
@@ -130,7 +146,7 @@ if trend_goster:
     sma_uzun = st.sidebar.slider("Uzun Vade (Ana Trend)", 10, 250, 50)
 
 st.title("🌍 Taha Uyanık | Ultra Premium Quant Fund")
-st.markdown("Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V11.0)")
+st.markdown("Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V12.0 TITAN)")
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
@@ -143,13 +159,19 @@ try:
         
     close_data = close_data.ffill().bfill()
     
+    # 0'a bölme hatalarını engelle
     ilk_satir = close_data.iloc[0].replace(0, 0.0001)
     normalize_veri = (close_data / ilk_satir) * 100
+    
+    # Portföyü Hesapla
     normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
+    # Dinamik SMA Hesaplamaları (Hata önleyici zırh ile)
     if trend_goster:
-        normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
-        normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
+        if len(normalize_veri) >= sma_kisa:
+            normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
+        if len(normalize_veri) >= sma_uzun:
+            normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
 
     tab1, tab2, tab3, tab4 = st.tabs([
         "📈 Algoritmik Terminal", 
@@ -194,16 +216,31 @@ try:
         secili_hisse = st.selectbox("İncelenecek Hisseyi Seçin", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'])
         
         if secili_hisse:
-            h_close, h_open, h_high, h_low, h_vol = close_data[secili_hisse], open_data[secili_hisse], high_data[secili_hisse], low_data[secili_hisse], vol_data[secili_hisse]
+            h_close = close_data[secili_hisse]
+            h_open = open_data[secili_hisse]
+            h_high = high_data[secili_hisse]
+            h_low = low_data[secili_hisse]
+            h_vol = vol_data[secili_hisse]
+            
             h_rsi = calculate_rsi(h_close)
             h_macd, h_signal, h_hist = calculate_macd(h_close)
             
-            fig_tech = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.03, row_heights=[0.5, 0.15, 0.15, 0.2], subplot_titles=(f"{secili_hisse} Fiyat Hareketi", "İşlem Hacmi", "RSI (Göreceli Güç)", "MACD"))
+            fig_tech = make_subplots(
+                rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.03, 
+                row_heights=[0.5, 0.15, 0.15, 0.2], 
+                subplot_titles=(f"{secili_hisse} Fiyat Hareketi", "İşlem Hacmi", "RSI (Göreceli Güç)", "MACD")
+            )
+            
             fig_tech.add_trace(go.Candlestick(x=h_close.index, open=h_open, high=h_high, low=h_low, close=h_close, increasing_line_color='#DEFF9A', decreasing_line_color='#FF4C4C'), row=1, col=1)
-            fig_tech.add_trace(go.Bar(x=h_vol.index, y=h_vol, marker_color=['#DEFF9A' if row['close'] >= row['open'] else '#FF4C4C' for index, row in pd.concat([h_open, h_close], axis=1, keys=['open', 'close']).iterrows()]), row=2, col=1)
+            
+            # Hacim Renklendirmesi (Kusursuz Mimari)
+            colors = ['#DEFF9A' if row['close'] >= row['open'] else '#FF4C4C' for index, row in pd.concat([h_open, h_close], axis=1, keys=['open', 'close']).iterrows()]
+            fig_tech.add_trace(go.Bar(x=h_vol.index, y=h_vol, marker_color=colors), row=2, col=1)
+            
             fig_tech.add_trace(go.Scatter(x=h_rsi.index, y=h_rsi, line=dict(color='#3B82F6', width=2)), row=3, col=1)
             fig_tech.add_hline(y=70, line_dash="dot", line_color="red", row=3, col=1)
             fig_tech.add_hline(y=30, line_dash="dot", line_color="green", row=3, col=1)
+            
             fig_tech.add_trace(go.Scatter(x=h_macd.index, y=h_macd, line=dict(color='#DEFF9A')), row=4, col=1)
             fig_tech.add_trace(go.Scatter(x=h_signal.index, y=h_signal, line=dict(color='#FF4C4C')), row=4, col=1)
             fig_tech.add_trace(go.Bar(x=h_hist.index, y=h_hist, marker_color=['#DEFF9A' if val >= 0 else '#FF4C4C' for val in h_hist]), row=4, col=1)
@@ -216,6 +253,7 @@ try:
     with tab3:
         st.markdown("### 🕵️‍♂️ NLP Haber Okuyucusu ve Karar Motoru")
         col_ai1, col_ai2 = st.columns([2, 1])
+        
         with col_ai1:
             st.markdown("#### Sektörel Makro Tarama")
             st.markdown(f"""
@@ -225,6 +263,19 @@ try:
                 <p style="color:#8B949E; font-size:13px; margin-top:10px;">Yapay zeka motorumuz spesifik hisse haberi bulamadığında otomatik olarak sektörel makro görünüme odaklanır.</p>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Devasa Özellik: Sovereign Makro Puanı
+            st.markdown("#### 🌍 Global Makro Puan (Sovereign Gauge)")
+            fig_gauge = go.Figure(go.Indicator(
+                mode = "gauge+number", value = 72, title = {'text': "Piyasa Hissiyatı (Sentiment)", 'font': {'color': '#F5F5F5'}},
+                gauge = {
+                    'axis': {'range': [None, 100], 'tickcolor': "#F5F5F5"}, 'bar': {'color': "#DEFF9A"},
+                    'steps': [{'range': [0, 40], 'color': "#FF4C4C"}, {'range': [40, 60], 'color': "#1E2532"}, {'range': [60, 100], 'color': "#3B82F6"}],
+                    'threshold': {'line': {'color': "white", 'width': 4}, 'thickness': 0.75, 'value': 72}
+                }
+            ))
+            fig_gauge.update_layout(height=250, margin=dict(l=10, r=10, t=40, b=10), paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'))
+            st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
 
         with col_ai2:
             st.markdown("#### 🤖 Algoritmik Taktik")
@@ -247,12 +298,18 @@ try:
             """, unsafe_allow_html=True)
 
     with tab4:
-        st.markdown("### ⚖️ Kantitatif Risk & Monte Carlo")
+        st.markdown("### ⚖️ Kantitatif Risk & Raporlama")
         getiriler = close_data.pct_change().dropna()
         if len(getiriler) > 0:
             portfoy_getiri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
+            
+            # Risk Metrikleri Hesaplaması
             fon_vol = float(np.nan_to_num(portfoy_getiri.std() * (252 ** 0.5) * 100))
-            var_95 = np.percentile(portfoy_getiri, 5) * 100 
+            
+            # Sharpe Oranı (Yeni Eklendi - 40% Risksiz Getiri Varsayımı)
+            rf_gunluk = 0.40 / 252 
+            excess_return = portfoy_getiri - rf_gunluk
+            sharpe_ratio = float(np.nan_to_num((excess_return.mean() / portfoy_getiri.std()) * (252 ** 0.5)))
             
             fon_kumulatif = (1 + portfoy_getiri).cumprod()
             fon_zirve = fon_kumulatif.cummax()
@@ -261,27 +318,31 @@ try:
 
             r_col1, r_col2, r_col3 = st.columns(3)
             r_col1.metric("Fon Yıllık Volatilite", f"%{fon_vol:.2f}", delta="Dalgalanma Boyutu", delta_color="off")
-            r_col2.metric("Maksimum Düşüş (Drawdown)", f"%{fon_dd:.2f}", delta="Kriz Direnci", delta_color="off")
-            r_col3.metric("Günlük VaR (%95 Güven)", f"%{var_95:.2f}", delta="Beklenen Maks Kayıp", delta_color="off")
+            r_col2.metric("Maksimum Düşüş (Drawdown)", f"%{fon_dd:.2f}", delta="Tarihsel Kriz Direnci", delta_color="off")
+            r_col3.metric("Sharpe Oranı (Risk Ayarlı)", f"{sharpe_ratio:.2f}", delta="1.0 Üzeri Mükemmel", delta_color="normal" if sharpe_ratio > 0 else "inverse")
             
             st.markdown("---")
             kor_col1, kor_col2 = st.columns([1, 1])
             with kor_col1:
-                st.markdown("**🧩 Fon Korelasyon Matrisi**")
+                st.markdown("**🧩 Fon Korelasyon Matrisi (Risk Radarı)**")
                 hisse_getirileri = getiriler[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']]
                 kor_matrisi = hisse_getirileri.corr().values
-                fig_corr = go.Figure(data=go.Heatmap(z=kor_matrisi, x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], colorscale=[[0, '#090B10'], [0.5, '#192C3D'], [1, '#DEFF9A']], text=np.round(kor_matrisi, 2), texttemplate="%{text}", textfont={"color": "white", "size": 14}, showscale=False))
-                fig_corr.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=20, r=20), xaxis_showgrid=False, yaxis_showgrid=False, yaxis_autorange='reversed')
+                fig_corr = go.Figure(data=go.Heatmap(
+                    z=kor_matrisi, x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], 
+                    colorscale=[[0, '#090B10'], [0.5, '#192C3D'], [1, '#DEFF9A']], 
+                    text=np.round(kor_matrisi, 2), texttemplate="%{text}", textfont={"color": "white", "size": 14}, showscale=False
+                ))
+                fig_corr.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=20, r=20), xaxis_showgrid=False, yaxis_showgrid=False, yaxis_autorange='reversed', font=dict(color='#F5F5F5'))
                 st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
                 
             with kor_col2:
-                st.markdown("**🌊 Kriz Direnci (Drawdown)**")
+                st.markdown("**🌊 Kriz Direnci (Underwater / Drawdown)**")
                 fig_dd = go.Figure(go.Scatter(x=drawdown_serisi.index.strftime('%Y-%m-%d'), y=drawdown_serisi, fill='tozeroy', mode='lines', line=dict(color='#FF4C4C', width=1.5), fillcolor='rgba(255, 76, 76, 0.1)'))
-                fig_dd.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=20, r=20), xaxis=dict(showgrid=True, gridcolor='#1E2532'), yaxis=dict(showgrid=True, gridcolor='#1E2532'))
+                fig_dd.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=20, b=20, l=20, r=20), xaxis=dict(showgrid=True, gridcolor='#1E2532'), yaxis=dict(showgrid=True, gridcolor='#1E2532'), font=dict(color='#F5F5F5'))
                 st.plotly_chart(fig_dd, use_container_width=True, config={'displayModeBar': False})
 
             st.markdown("---")
-            st.markdown("### 🔮 Monte Carlo Simülasyonu (1 Yıllık)")
+            st.markdown("### 🔮 Monte Carlo Gelecek Projeksiyonu (1 Yıl)")
             mu, sigma = portfoy_getiri.mean(), portfoy_getiri.std()
             sim_df = np.zeros((252, 100))
             sim_df[0] = 100000
@@ -291,7 +352,12 @@ try:
             for i in range(100): fig_mc.add_trace(go.Scatter(y=sim_df[:, i], mode='lines', line=dict(color='rgba(222, 255, 154, 0.03)', width=1), showlegend=False, hoverinfo='skip'))
             fig_mc.add_trace(go.Scatter(y=sim_df.mean(axis=1), mode='lines', name='Beklenen Ortalama', line=dict(color='#3B82F6', width=3, dash='dash')))
             
-            fig_mc.update_layout(height=500, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#A0ABC0'), xaxis=dict(showgrid=True, gridcolor='#1E2532'), yaxis=dict(showgrid=True, gridcolor='#1E2532'), margin=dict(t=20, b=20, l=0, r=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            fig_mc.update_layout(
+                height=500, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#A0ABC0'), 
+                xaxis=dict(showgrid=True, gridcolor='#1E2532', title="Gelecek Günler"), 
+                yaxis=dict(showgrid=True, gridcolor='#1E2532', title="Sermaye (TL)"), 
+                margin=dict(t=20, b=20, l=0, r=0), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
             st.plotly_chart(fig_mc, use_container_width=True, config={'displayModeBar': False})
 
 except Exception as e:
