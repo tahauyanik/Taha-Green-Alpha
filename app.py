@@ -11,9 +11,9 @@ st.markdown("""
 /* Karanlık Tema ve Ana Arka Plan */
 .stApp { background-color: #0E1117 !important; }
 
-/* Üstteki Streamlit Menü Çubuğunu ve Footer'ı Gizle */
+/* V5.4 KESİN ÇÖZÜM: Header'ı GİZLEME, ŞEFFAF YAP! (Menü açma tuşu kaybolmasın) */
+header { background-color: transparent !important; }
 #MainMenu {visibility: hidden;}
-header {visibility: hidden;}
 footer {visibility: hidden;}
 
 /* Sidebar Arka Planı ve Çizgisi */
@@ -23,55 +23,52 @@ footer {visibility: hidden;}
 }
 
 /* Kusursuz Selectbox (Beyaz Kutu İmhasi) */
+div[data-baseweb="select"] { background-color: #161A22 !important; }
 div[data-baseweb="select"] > div {
     background-color: #161A22 !important;
     color: #F5F5F5 !important;
     border: 1px solid #DEFF9A !important; 
     border-radius: 8px !important;
 }
-ul[role="listbox"] {
+div[data-baseweb="select"] svg { color: #DEFF9A !important; }
+div[role="listbox"], ul[role="listbox"] {
     background-color: #161A22 !important;
+    border: 1px solid #2D323C !important;
 }
-li[role="option"] {
+ul[data-testid="stSelectboxVirtualDropdown"] { background-color: #161A22 !important; }
+li[role="option"] { color: #F5F5F5 !important; background-color: #161A22 !important; }
+li[role="option"]:hover { background-color: #2D323C !important; color: #DEFF9A !important; }
+
+/* V5.4 KESİN ÇÖZÜM: METRİK KUTULARI (stMetric doğrudan hedeflendi) */
+[data-testid="stMetric"] {
     background-color: #161A22 !important;
-    color: #F5F5F5 !important;
-}
-li[role="option"]:hover {
-    background-color: #2D323C !important;
-    color: #DEFF9A !important;
-}
-
-/* Toggle (Şalter) Rengini Neon Yeşil Yapma (Kırmızıdan Kurtuluş) */
-div[data-testid="stToggle"] div[data-baseweb="checkbox"] > div:first-child {
-    background-color: #2D323C !important;
-}
-div[data-testid="stToggle"] input:checked + div > div:first-child {
-    background-color: #A3FF00 !important;
-}
-
-/* V5.2 METRİK KUTULARI (3D KART ETKİSİ) */
-div[data-testid="metric-container"] {
-    background-color: #1A1E26 !important;
-    border: 1px solid #DEFF9A !important;
+    border: 1px solid #2D323C !important; 
     padding: 20px !important;
     border-radius: 12px !important;
-    box-shadow: 0 4px 10px rgba(222, 255, 154, 0.05) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
     transition: all 0.3s ease-in-out !important;
 }
 
-div[data-testid="metric-container"]:hover {
+[data-testid="stMetric"]:hover {
     transform: translateY(-5px) !important;
-    box-shadow: 0 8px 20px rgba(222, 255, 154, 0.2) !important;
-    border: 1px solid #A3FF00 !important;
+    box-shadow: 0 8px 20px rgba(222, 255, 154, 0.15) !important;
+    border: 1px solid #DEFF9A !important;
 }
 
-/* Rakamların Rengi ve Etiketleri */
-[data-testid="stMetricValue"] > div { color: #DEFF9A !important; font-weight: 900 !important; }
-[data-testid="stMetricLabel"] > div > div > p { color: #B0C4DE !important; font-weight: 600 !important; font-size: 16px !important; }
+/* Rakamların Rengi (Neon Yeşil Vurgu) */
+[data-testid="stMetricValue"] { color: #F5F5F5 !important; font-weight: 800 !important; }
+
+/* Delta (Artış/Azalış) Renkleri */
 [data-testid="stMetricDelta"] svg { fill: #A3FF00 !important; }
-[data-testid="stMetricDelta"] > div { color: #A3FF00 !important; font-weight: bold !important; }
+[data-testid="stMetricDelta"] { color: #A3FF00 !important; }
+
+/* Yazı Başlıkları ve Etiketleri */
 h1, h2, h3, p, label { color: #F5F5F5 !important; }
+
+/* Slider Renkleri ve Toggle Rengi */
 div[data-baseweb="slider"] div { background-color: #DEFF9A !important; }
+div[data-testid="stToggle"] div[data-baseweb="checkbox"] > div:first-child { background-color: #2D323C !important; }
+div[data-testid="stToggle"] input:checked + div > div:first-child { background-color: #A3FF00 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -104,6 +101,7 @@ try:
         st.stop()
         
     veri = veri.ffill().bfill() 
+    
     ilk_satir = veri.iloc[0].replace(0, 0.0001)
     normalize_veri = (veri / ilk_satir) * 100
     
@@ -120,14 +118,16 @@ try:
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['TAHA_YESIL_FON'],
+        x=normalize_veri.index.strftime('%Y-%m-%d'), 
+        y=normalize_veri['TAHA_YESIL_FON'],
         mode='lines', name='Taha Yeşil Fon',
         line=dict(color='#DEFF9A', width=3),
         hovertemplate="<b>Taha Yeşil Fon:</b> %{y:.2f}<extra></extra>"
     ))
 
     fig.add_trace(go.Scatter(
-        x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri['XU100.IS'],
+        x=normalize_veri.index.strftime('%Y-%m-%d'), 
+        y=normalize_veri['XU100.IS'],
         mode='lines', name='BIST100',
         line=dict(color='#64748B', width=2), 
         hovertemplate="<b>BIST100:</b> %{y:.2f}<extra></extra>"
@@ -137,25 +137,33 @@ try:
         if f'SMA_{sma_kisa}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
                 x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_kisa}'],
-                mode='lines', name=f'SMA {sma_kisa} (Hızlı Trend)', line=dict(color='#FFA500', width=1.5, dash='dot')
+                mode='lines', name=f'SMA {sma_kisa} (Hızlı)',
+                line=dict(color='#FFA500', width=1.5, dash='dot'),
+                hovertemplate=f"SMA {sma_kisa}: %{{y:.2f}}<extra></extra>"
             ))
         if f'SMA_{sma_uzun}' in normalize_veri.columns:
             fig.add_trace(go.Scatter(
                 x=normalize_veri.index.strftime('%Y-%m-%d'), y=normalize_veri[f'SMA_{sma_uzun}'],
-                mode='lines', name=f'SMA {sma_uzun} (Ana Trend)', line=dict(color='#FF1493', width=1.5, dash='dot')
+                mode='lines', name=f'SMA {sma_uzun} (Ana)',
+                line=dict(color='#FF1493', width=1.5, dash='dot'),
+                hovertemplate=f"SMA {sma_uzun}: %{{y:.2f}}<extra></extra>"
             ))
 
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
-        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45),
+        xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45, rangeslider=dict(visible=False)),
         yaxis=dict(showgrid=True, gridcolor='#1E222A'),
-        # V5.3 DÜZELTME: Lejant grafiğin EN ALTINA, X Ekseninin altına taşındı. Zoom tuşlarıyla asla çakışmayacak!
         legend=dict(
-            bgcolor='rgba(22, 26, 34, 0.9)', bordercolor='#DEFF9A', borderwidth=1, 
-            orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5,
-            font=dict(color='#FFFFFF', size=13)
+            bgcolor='rgba(22, 26, 34, 0.9)', 
+            bordercolor='#DEFF9A', 
+            borderwidth=1, 
+            orientation="h", 
+            yanchor="top", y=-0.35, # V5.4 KESİN ÇÖZÜM: X ekseni tarihleriyle çakışmaması için daha aşağı alındı
+            xanchor="center", x=0.5,
+            font=dict(color='#FFFFFF', size=12)
         ),
-        margin=dict(l=0, r=0, t=20, b=50), hovermode='x unified',
+        margin=dict(l=0, r=0, t=50, b=90), # Alt boşluk genişletildi ki legend sığsın
+        hovermode='x unified',
         hoverlabel=dict(bgcolor="#161A22", font_size=14, font_family="Arial", font_color="#FFFFFF", bordercolor="#DEFF9A")
     )
     
@@ -214,9 +222,12 @@ try:
             st.markdown("**Sualtı Grafiği (Underwater / Drawdown)**")
             fig_dd = go.Figure()
             fig_dd.add_trace(go.Scatter(
-                x=drawdown_serisi.index.strftime('%Y-%m-%d'), y=drawdown_serisi,
-                fill='tozeroy', mode='lines', line=dict(color='#FF4C4C', width=1),
-                fillcolor='rgba(255, 76, 76, 0.2)', name='Düşüş (Drawdown)',
+                x=drawdown_serisi.index.strftime('%Y-%m-%d'), 
+                y=drawdown_serisi,
+                fill='tozeroy', mode='lines',
+                line=dict(color='#FF4C4C', width=1),
+                fillcolor='rgba(255, 76, 76, 0.2)',
+                name='Düşüş (Drawdown)',
                 hovertemplate="Tarih: %{x}<br>Düşüş: %{y:.2f}%<extra></extra>"
             ))
             fig_dd.update_layout(
