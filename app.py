@@ -4,10 +4,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-import datetime
 
 st.set_page_config(
-    page_title="Sovereign Quant | V15.0 SUPREMACY", 
+    page_title="Sovereign Quant | V16.0 ELITE", 
     page_icon="🌍", 
     layout="wide", 
     initial_sidebar_state="expanded"
@@ -105,7 +104,7 @@ div[data-baseweb="tab-highlight"] {
     margin-bottom: 8px;
 }
 .glass-metric-value {
-    color: #F5F5F5;
+    color: #F5F5F5; /* Neon çöpe atıldı, SAF BEYAZ ve LÜKS */
     font-size: 32px;
     font-weight: 800;
     letter-spacing: -1px;
@@ -237,7 +236,7 @@ class SovereignVisualEngine:
 
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png", width=40)
 st.sidebar.markdown("<h3 style='font-weight: 800; margin-bottom: 0;'>Sovereign Terminal</h3>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 0;'>V15.0 SUPREMACY ARCHITECTURE</p>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 0;'>V16.0 ELITE ARCHITECTURE</p>", unsafe_allow_html=True)
 st.sidebar.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 
 st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600;'>⚙️ ZAMAN MAKİNESİ</p>", unsafe_allow_html=True)
@@ -259,7 +258,7 @@ if trend_goster:
     sma_uzun = st.sidebar.slider("Uzun Vade SMA", 10, 250, 50)
 
 st.markdown("<h1 style='font-size: 38px; letter-spacing: -1px; margin-bottom: 5px;'>🌍 Taha Uyanık <span style='color: #2D323C;'>|</span> <span style='color: #F5F5F5;'>Ultra Premium Quant Fund</span></h1>", unsafe_allow_html=True)
-st.markdown("<p style='color: #8B949E; font-size: 15px; margin-bottom: 25px;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V15.0 SUPREMACY)</p>", unsafe_allow_html=True)
+st.markdown("<p style='color: #8B949E; font-size: 15px; margin-bottom: 25px;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V16.0 ELITE)</p>", unsafe_allow_html=True)
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
@@ -335,6 +334,7 @@ try:
         fark = yesil_sonuc - bist_sonuc
         fon_buyume = ((yesil_sonuc-100000)/100000)*100
 
+        # YENİ KURUMSAL METRİK KARTLARI (BEYAZ RAKAMLAR)
         html_cards = f"""
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
             <div class="glass-metric-card">
@@ -344,7 +344,7 @@ try:
             </div>
             <div class="glass-metric-card">
                 <div class="glass-metric-title">Taha Yeşil Fon Getirisi</div>
-                <div class="glass-metric-value" style="color: #DEFF9A;">{yesil_sonuc:,.0f} ₺</div>
+                <div class="glass-metric-value">{yesil_sonuc:,.0f} ₺</div>
                 <div class="glass-metric-delta positive">↑ %{fon_buyume:.1f} Fon Büyümesi</div>
             </div>
             <div class="glass-metric-card">
@@ -448,29 +448,29 @@ try:
         
         if len(getiriler) > 0:
             portfoy_getiri = getiriler.mean(axis=1)
-            # Alpha ve Beta'yı dahil ederek Risk motorunu çalıştır
             fon_vol, b_vol, sharpe, sortino, fon_dd, var_95, drawdown_serisi, alpha, beta = SovereignRiskEngine.calculate_metrics(portfoy_getiri, bist_getiri)
 
+            # RİSK KARTLARI DA ELİT VE OKUNABİLİR HALE GETİRİLDİ
             risk_cards = f"""
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
                 <div class="glass-metric-card" style="padding: 15px;">
                     <div class="glass-metric-title">Fon Yıllık Volatilite</div>
-                    <div class="glass-metric-value" style="font-size: 22px;">%{fon_vol:.2f}</div>
+                    <div class="glass-metric-value" style="font-size: 26px;">%{fon_vol:.2f}</div>
                     <div class="glass-metric-delta neutral">BIST100: %{b_vol:.2f}</div>
                 </div>
                 <div class="glass-metric-card" style="padding: 15px;">
                     <div class="glass-metric-title">Maks Düşüş (Drawdown)</div>
-                    <div class="glass-metric-value" style="font-size: 22px; color: #FF4C4C;">%{fon_dd:.2f}</div>
+                    <div class="glass-metric-value" style="font-size: 26px;">%{fon_dd:.2f}</div>
                     <div class="glass-metric-delta positive">Tarihsel Kriz Direnci</div>
                 </div>
                 <div class="glass-metric-card" style="padding: 15px;">
                     <div class="glass-metric-title">Piyasa Betası (Risk)</div>
-                    <div class="glass-metric-value" style="font-size: 22px; color: {'#DEFF9A' if beta < 1 else '#FF4C4C'};">{beta:.2f}</div>
+                    <div class="glass-metric-value" style="font-size: 26px;">{beta:.2f}</div>
                     <div class="glass-metric-delta {'positive' if beta < 1 else 'negative'}">1.0 Altı Defansiftir</div>
                 </div>
                 <div class="glass-metric-card" style="padding: 15px;">
                     <div class="glass-metric-title">Yaratılan Yıllık Alpha</div>
-                    <div class="glass-metric-value" style="font-size: 22px; color: {'#DEFF9A' if alpha > 0 else '#FF4C4C'};">% {alpha:.2f}</div>
+                    <div class="glass-metric-value" style="font-size: 26px;">% {alpha:.2f}</div>
                     <div class="glass-metric-delta {'positive' if alpha > 0 else 'negative'}">Fon Yönetim Başarısı</div>
                 </div>
             </div>
