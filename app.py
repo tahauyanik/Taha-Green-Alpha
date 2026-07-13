@@ -450,11 +450,14 @@ try:
         col_ai3, col_ai4 = st.columns([1, 1.618], gap="large")
         
         with col_ai3:
+            # Gauge ibresi artık skora göre akıllı renk değiştiriyor (Kuantum Uyum)
+            bar_color = "#FF4C4C" if sentiment_score < 45 else ("#DEFF9A" if sentiment_score <= 75 else "#F59E0B")
+            
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = sentiment_score,
                 gauge = {
                     'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#2D323C", 'tickfont': dict(color="#8B949E")}, 
-                    'bar': {'color': "#DEFF9A", 'thickness': 0.15},
+                    'bar': {'color': bar_color, 'thickness': 0.15},
                     'bgcolor': "rgba(0,0,0,0)",
                     'borderwidth': 0,
                     'steps': [
