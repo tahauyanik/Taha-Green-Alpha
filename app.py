@@ -10,7 +10,7 @@ st.set_page_config(
     page_title="Sovereign Quant | Taha Uyanık", 
     page_icon="🌍", 
     layout="wide", 
-    initial_sidebar_state="expanded" 
+    initial_sidebar_state="collapsed" 
 )
 
 st.markdown("""
@@ -25,41 +25,27 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
     background-image: radial-gradient(circle at 50% -20%, #0A0F18 0%, #030407 80%) !important;
 }
 
-/* ÇÖP TEMİZLİĞİ VE İKON İNFAZI */
+/* ÇÖP TEMİZLİĞİ VE SİDEBAR İNFAZI */
 [data-testid="stHeader"] { background-color: transparent !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 a { pointer-events: none; cursor: default; text-decoration: none !important; }
 .css-15zrgzn { display: none !important; } 
 
-/* GİZLİ MENÜ TUŞU ZIRHI */
-[data-testid="collapsedControl"] {
-    display: flex !important; color: #DEFF9A !important;
-    background-color: rgba(10, 15, 24, 0.95) !important;
-    border: 1px solid rgba(222, 255, 154, 0.4) !important;
-    border-radius: 6px !important; z-index: 99999 !important;
-    transition: all 0.3s ease;
-}
-[data-testid="collapsedControl"]:hover { 
-    border: 1px solid #DEFF9A !important; 
-    box-shadow: 0 0 15px rgba(222, 255, 154, 0.3) !important; 
-}
+/* Sol Menüyü Tamamen Yok Ettik (Artık her şey ana ekranda) */
+[data-testid="collapsedControl"] { display: none !important; }
+section[data-testid="stSidebar"] { display: none !important; }
 
-/* Sidebar Toggle Fix */
-[data-testid="stSidebarNav"] { display: none !important; }
-section[data-testid="stSidebar"] {
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s !important;
-}
-
+/* HIZLANDIRILMIŞ TAB VE KART CSS'LERİ (GPU Donanım Hızlandırması Eklendi) */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 34px; background-color: transparent !important; /* Fibonacci 34 */
+    gap: 34px; background-color: transparent !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding-bottom: 0px;
 }
 .stTabs [data-baseweb="tab"] {
-    height: 55px; background-color: transparent !important; /* Fibonacci 55 */
+    height: 55px; background-color: transparent !important;
     padding: 0px 8px !important; color: #6B7280 !important;
     font-weight: 500 !important; font-size: 14px !important;
-    border: none !important; transition: all 0.4s ease;
+    border: none !important; transition: color 0.2s ease;
     letter-spacing: 0.5px;
 }
 .stTabs [data-baseweb="tab"]:hover { color: #D1D5DB !important; background-color: transparent !important; }
@@ -68,20 +54,22 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 
 .glass-metric-card {
     background: linear-gradient(160deg, rgba(16, 20, 26, 0.90) 0%, rgba(8, 10, 14, 0.98) 100%);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Performans için Blur düşürüldü */
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 26px 42px; /* FIBONACCI PADDING (1.615 Oran) */
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 26px 42px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Performans için hafifletildi */
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; /* Sadece gerekli olanlar anime ediliyor */
+    will-change: transform; /* Donanım ivmelendirmesi (GPU) */
+    transform: translateZ(0);
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 144px; position: relative; overflow: hidden;
 }
 .glass-metric-card:hover {
-    transform: translateY(-3px); 
+    transform: translateY(-3px) translateZ(0); 
     border-top: 1px solid rgba(222, 255, 154, 0.5);
-    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.9), 0 0 20px rgba(222, 255, 154, 0.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(222, 255, 154, 0.05);
 }
 .glass-metric-title {
     color: #8B949E; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
@@ -94,12 +82,13 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 .glass-metric-delta.negative { color: #FF4C4C; }
 .glass-metric-delta.neutral { color: #A0ABC0; }
 
-/* PALANTIR TERMİNAL TASARIMI (AI Sekmesi İçin) */
+/* PALANTIR TERMİNAL TASARIMI */
 .terminal-card {
     background: #0A0C12; border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 12px; padding: 34px; position: relative;
-    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.9);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+    will-change: transform; transform: translateZ(0);
 }
 .terminal-card::before {
     content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
@@ -107,7 +96,8 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 }
 .terminal-font { font-family: 'JetBrains Mono', monospace; }
 
-.stSelectbox div[data-baseweb="select"] > div {
+/* Selectbox ve Input Arayüzü (Karanlık Tema) */
+.stSelectbox div[data-baseweb="select"] > div, .stNumberInput > div > div > input {
     background-color: #0A0C12 !important; color: #F5F5F5 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important;
     font-weight: 500 !important;
@@ -116,8 +106,7 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 .stSelectbox li { background-color: transparent !important; color: #F5F5F5 !important; }
 .stSelectbox li:hover { background-color: rgba(222, 255, 154, 0.1) !important; color: #DEFF9A !important; }
 
-/* Sidebar Asaleti */
-[data-testid="stSidebar"] { background-color: rgba(5, 7, 10, 0.98) !important; border-right: 1px solid rgba(255, 255, 255, 0.03) !important; }
+/* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: #030407; }
 ::-webkit-scrollbar-thumb { background: #1C212B; border-radius: 5px; }
@@ -158,13 +147,13 @@ class SovereignDataEngine:
         macd = exp1 - exp2
         signal_line = macd.ewm(span=9, adjust=False).mean()
         
-        # On-Balance Volume (OBV) - Kurumsal Para Akışı (Yeni)
+        # On-Balance Volume (OBV)
         obv = (np.sign(delta) * volume).fillna(0).cumsum()
         
         # Bollinger Bands
         sma_20 = close_prices.rolling(window=20).mean()
         std_20 = close_prices.rolling(window=20).std()
-        upper_band = sma_20 + (std_20 * 2.1) # Kuantitatif hassasiyet
+        upper_band = sma_20 + (std_20 * 2.1)
         lower_band = sma_20 - (std_20 * 2.1)
         
         return rsi, macd, signal_line, upper_band, lower_band, obv, sma_20
@@ -189,14 +178,14 @@ class SovereignRiskEngine:
         downside_deviation = negative_returns.std() * np.sqrt(252)
         sortino_ratio = (excess_returns.mean() * 252) / downside_deviation if downside_deviation > 0 else 0
         
-        # Drawdown & Calmar (Yeni)
+        # Drawdown & Calmar
         cumulative = (1 + returns).cumprod()
         peak = cumulative.cummax()
         drawdown = ((cumulative - peak) / peak) * 100
         max_dd = drawdown.min()
         calmar_ratio = (port_ann_return * 100) / abs(max_dd) if abs(max_dd) > 0 else 0
         
-        # Information Ratio (Yeni)
+        # Information Ratio
         tracking_error = (returns - benchmark_returns).std() * np.sqrt(252)
         info_ratio = (port_ann_return - bench_ann_return) / tracking_error if tracking_error > 0 else 0
         
@@ -224,7 +213,6 @@ class SovereignVisualEngine:
     
     @classmethod
     def apply_card_layout(cls, fig):
-        """Grafiği sanki bir CSS kartıymış gibi gösterir (Gauge için)"""
         fig = cls.apply_premium_layout(fig)
         fig.update_layout(
             paper_bgcolor=cls.COLORS['card'],
@@ -235,39 +223,36 @@ class SovereignVisualEngine:
         )
         return fig
 
-if 'trend_kalkani' not in st.session_state: 
-    st.session_state.trend_kalkani = True
-if 'bollinger_kalkani' not in st.session_state: 
-    st.session_state.bollinger_kalkani = False
-
-st.sidebar.markdown("<h3 style='font-weight: 800; margin-bottom: 0; font-size:16px; color: #F5F5F5; letter-spacing: 0.5px;'>⚙️ Kontrol Paneli</h3>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color: #6B7280; font-size: 11px; margin-top: 2px;'>V21.0 APEX ELITE ENGINE</p>", unsafe_allow_html=True)
-
-st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600; margin-top:34px;'>Zaman Aralığı</p>", unsafe_allow_html=True)
-periyot = st.sidebar.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"], index=3, label_visibility="collapsed")
-
-st.sidebar.markdown("<hr style='margin: 34px 0;'>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color: #8B949E; font-size: 12px; font-weight: 600;'>🧠 Algoritmik Araçlar</p>", unsafe_allow_html=True)
-
-trend_goster = st.sidebar.checkbox("Algoritmik Trend (SMA)", value=st.session_state.trend_kalkani, key="trend_toggle")
-bollinger_goster = st.sidebar.checkbox("Volatilite Zırhı (Bollinger)", value=st.session_state.bollinger_kalkani, key="bollinger_toggle")
-
-st.session_state.trend_kalkani = trend_goster
-st.session_state.bollinger_kalkani = bollinger_goster
-
-sma_kisa, sma_uzun = 20, 50
-if trend_goster:
-    sma_kisa = st.sidebar.slider("Kısa Vade Momentum", 5, 100, 20)
-    sma_uzun = st.sidebar.slider("Uzun Vade Trend", 10, 250, 50)
-
+# --- BAŞLIK ALANI ---
 st.markdown("""
-<div style='margin-bottom: 34px;'>
+<div style='margin-bottom: 10px; margin-top: 15px;'>
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
         🌍 Taha Uyanık <span style='color: #2D323C; font-weight:300;'>|</span> Sovereign Quant Fund
     </h1>
-    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V21.0 APEX)</p>
+    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Yapay Zeka Destekli Katılım Endeksli Yeşil Enerji Portföy Yönetim Sistemi (V22.0 LINKEDIN EDITION)</p>
 </div>
 """, unsafe_allow_html=True)
+
+# --- ANA KONTROL PANELİ (KAYBOLAN SİDEBAR'IN YERİNE BURAYA ÇİVİLENDİ) ---
+st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 5px; margin-bottom: 15px;'>", unsafe_allow_html=True)
+
+with st.container():
+    ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns(4)
+    with ctrl_col1:
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>ANALİZ PERİYODU</p>", unsafe_allow_html=True)
+        periyot = st.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"], index=3, label_visibility="collapsed")
+    with ctrl_col2:
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>ALGORİTMİK ZIRHLAR</p>", unsafe_allow_html=True)
+        trend_goster = st.checkbox("SMA Trend Kalkanı", value=True)
+        bollinger_goster = st.checkbox("Bollinger Volatilite Zırhı", value=False)
+    with ctrl_col3:
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>KISA VADE (MOMENTUM)</p>", unsafe_allow_html=True)
+        sma_kisa = st.slider("Kısa Vade SMA", 5, 100, 20, label_visibility="collapsed") if trend_goster else 20
+    with ctrl_col4:
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>UZUN VADE (ANA TREND)</p>", unsafe_allow_html=True)
+        sma_uzun = st.slider("Uzun Vade SMA", 10, 250, 50, label_visibility="collapsed") if trend_goster else 50
+
+st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 15px; margin-bottom: 25px;'>", unsafe_allow_html=True)
 
 hisseler = ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS', 'XU100.IS']
 
@@ -317,7 +302,7 @@ try:
                 <div class="glass-metric-value">{bist_sonuc:,.0f} <span style="font-size:24px; color:#8B949E;">₺</span></div>
                 <div class="glass-metric-delta neutral">↑ Referans Endeks</div>
             </div>
-            <div class="glass-metric-card" style="border-top: 1px solid rgba(222, 255, 154, 0.4); box-shadow: 0 15px 35px -10px rgba(0,0,0,0.9), 0 0 20px rgba(222, 255, 154, 0.05);">
+            <div class="glass-metric-card" style="border-top: 1px solid rgba(222, 255, 154, 0.4); box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(222, 255, 154, 0.05);">
                 <div class="glass-metric-title" style="color:#DEFF9A;">Sovereign Fon Getirisi</div>
                 <div class="glass-metric-value">{yesil_sonuc:,.0f} <span style="font-size:24px; color:#8B949E;">₺</span></div>
                 <div class="glass-metric-delta positive">↑ %{((yesil_sonuc-100000)/100000)*100:.1f} Fon Büyümesi</div>
@@ -334,7 +319,7 @@ try:
         secili_hisse = st.selectbox("İncelenecek Hisseyi Seçin (Derin Analiz)", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'], index=0)
         h_close, h_open, h_high, h_low, h_vol = close_data[secili_hisse], open_data[secili_hisse], high_data[secili_hisse], low_data[secili_hisse], vol_data[secili_hisse]
         
-        h_rsi, h_macd, h_signal, upper_bb, lower_bb, h_obv, sma_20 = SovereignDataEngine.calculate_technical_indicators(h_close, h_vol)
+        h_rsi, h_macd, h_signal, upper_bb, lower_bb, h_obv, ind_sma_20 = SovereignDataEngine.calculate_technical_indicators(h_close, h_vol)
         
         fig_tech = make_subplots(
             rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.03, 
@@ -347,7 +332,7 @@ try:
         if bollinger_goster:
             fig_tech.add_trace(go.Scatter(x=h_close.index, y=upper_bb, line=dict(color='rgba(59, 130, 246, 0.3)', width=1), name="Upper BB", hoverinfo='skip'), row=1, col=1)
             fig_tech.add_trace(go.Scatter(x=h_close.index, y=lower_bb, line=dict(color='rgba(59, 130, 246, 0.3)', width=1), fill='tonexty', fillcolor='rgba(59, 130, 246, 0.05)', name="Lower BB", hoverinfo='skip'), row=1, col=1)
-            fig_tech.add_trace(go.Scatter(x=h_close.index, y=sma_20, line=dict(color='rgba(255,255,255,0.2)', width=1, dash='dot'), name="SMA 20", hoverinfo='skip'), row=1, col=1)
+            fig_tech.add_trace(go.Scatter(x=h_close.index, y=ind_sma_20, line=dict(color='rgba(255,255,255,0.2)', width=1, dash='dot'), name="SMA 20", hoverinfo='skip'), row=1, col=1)
         
         colors = ['#DEFF9A' if row['close'] >= row['open'] else '#FF4C4C' for index, row in pd.concat([h_open, h_close], axis=1, keys=['open', 'close']).iterrows()]
         fig_tech.add_trace(go.Bar(x=h_vol.index, y=h_vol, marker_color=colors, name="Hacim"), row=2, col=1)
@@ -372,7 +357,6 @@ try:
     with tab3:
         st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🕵️ NLP İstihbarat ve Makro Karar Motoru</h3>", unsafe_allow_html=True)
         
-        # Üst Satır - Asimetrik Altın Oran [1.618, 1]
         col_ai1, col_ai2 = st.columns([1.618, 1], gap="large")
         
         with col_ai1:
@@ -415,9 +399,8 @@ try:
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 34px;'></div>", unsafe_allow_html=True) # Fibonacci Gap
+        st.markdown("<div style='height: 34px;'></div>", unsafe_allow_html=True)
 
-        # Alt Satır - Zıt Asimetrik Altın Oran [1, 1.618]
         col_ai3, col_ai4 = st.columns([1, 1.618], gap="large")
         
         with col_ai3:
@@ -434,7 +417,7 @@ try:
                         {'range': [60, 100], 'color': "rgba(222, 255, 154, 0.15)"}
                     ]
                 },
-                number = {'font': {'color': '#F5F5F5', 'size': 55}} # Fibonacci 55
+                number = {'font': {'color': '#F5F5F5', 'size': 55}}
             ))
             fig_gauge = SovereignVisualEngine.apply_card_layout(fig_gauge)
             fig_gauge.update_layout(title=dict(text="GLOBAL MAKRO HİSSİYAT", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.9), height=280)
@@ -547,7 +530,6 @@ try:
                 
             fig_mc = go.Figure()
             
-            # %5 ve %95 Volatilite Konisi (Shaded Area)
             percentile_5 = np.percentile(sim_df, 5, axis=1)
             percentile_95 = np.percentile(sim_df, 95, axis=1)
             x_axis = np.arange(252)
@@ -555,10 +537,8 @@ try:
             fig_mc.add_trace(go.Scatter(x=x_axis, y=percentile_95, mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'))
             fig_mc.add_trace(go.Scatter(x=x_axis, y=percentile_5, mode='lines', fill='tonexty', fillcolor='rgba(222, 255, 154, 0.05)', line=dict(width=0), showlegend=False, hoverinfo='skip'))
 
-            # Paralel Evren Çizgileri
             for i in range(100): fig_mc.add_trace(go.Scatter(x=x_axis, y=sim_df[:, i], mode='lines', line=dict(color='rgba(222, 255, 154, 0.06)', width=1), showlegend=False, hoverinfo='skip'))
             
-            # Beklenen Ortalama
             fig_mc.add_trace(go.Scatter(x=x_axis, y=sim_df.mean(axis=1), mode='lines', name='Beklenen Ortalama (μ)', line=dict(color='#F5F5F5', width=3, dash='dash')))
             
             fig_mc = SovereignVisualEngine.apply_premium_layout(fig_mc)
