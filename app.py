@@ -227,7 +227,7 @@ try:
             
             fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.6, marker=dict(colors=colors, line=dict(color='#161A22', width=2)))])
             fig_pie.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', 
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', /* V6.1 PIE ŞEFFAFLIK */
                 font=dict(color='#F5F5F5'), margin=dict(t=20, b=20, l=20, r=20),
                 showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5, font=dict(color='#FFFFFF'))
             )
@@ -246,7 +246,7 @@ try:
                 hovertemplate="Tarih: %{x}<br>Düşüş: %{y:.2f}%<extra></extra>"
             ))
             fig_dd.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'), /* V6.1 DRAWDOWN ŞEFFAFLIK */
                 xaxis=dict(showgrid=True, gridcolor='#1E222A', tickangle=-45),
                 yaxis=dict(showgrid=True, gridcolor='#1E222A', title="% Düşüş"),
                 margin=dict(t=20, b=20, l=20, r=20), hovermode='x unified',
@@ -292,12 +292,19 @@ try:
             line=dict(color='#FF1493', width=3, dash='dash'), 
         ))
         
+        # V6.1: MONTE CARLO UX OVERHAUL (Aesthetic Fix)
         fig_mc.update_layout(
             plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#F5F5F5'),
             xaxis=dict(showgrid=True, gridcolor='#1E222A', title="Gelecek Günler (1 Yıl)"),
             yaxis=dict(showgrid=True, gridcolor='#1E222A', title="Sermaye Büyüklüğü (TL)", tickformat=",.0f"),
             margin=dict(t=20, b=20, l=20, r=20), hovermode='x unified',
-            legend=dict(bgcolor='rgba(22, 26, 34, 0.9)', bordercolor='#DEFF9A', borderwidth=1, orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(
+                bgcolor='rgba(22, 26, 34, 0.9)', 
+                bordercolor='#DEFF9A', 
+                borderwidth=1, 
+                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                font=dict(color='#FFFFFF') # V6.1 Lejant Rengi Sabitlendi
+            )
         )
         st.plotly_chart(fig_mc, use_container_width=True)
         
