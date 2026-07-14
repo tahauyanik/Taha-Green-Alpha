@@ -652,34 +652,37 @@ try:
                 
             with col_opt2:
                 w_alfas, w_yeotk, w_astor, w_kcaer = optimal_weights * 100
-                st.markdown(f"""
-                <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
-                    <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ALFAS.IS</span>
-                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_alfas:.1f}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">YEOTK.IS</span>
-                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_yeotk:.1f}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ASTOR.IS</span>
-                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_astor:.1f}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:21px;">
-                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
-                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
-                    </div>
-                    
-                    <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
-                        <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
-                        <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
-                        <span style="color: #8B949E; font-size: 11px;">OPTIMIZED VOLATILITY: </span>
-                        <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                
+                # HTML kodunun başındaki boşluklar Markdown hatasını önlemek için silindi
+                html_content = f"""
+<div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
+    <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ALFAS.IS</span>
+        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_alfas:.1f}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">YEOTK.IS</span>
+        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_yeotk:.1f}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ASTOR.IS</span>
+        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_astor:.1f}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:21px;">
+        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
+        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
+    </div>
+    
+    <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
+        <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
+        <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
+        <span style="color: #8B949E; font-size: 11px;">OPTIMIZED VOLATILITY: </span>
+        <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
+    </div>
+</div>
+"""
+                st.markdown(html_content, unsafe_allow_html=True)
 
 except Exception as e:
     st.error(f"Sistem Kritik Bir Hata Yakaladı: {e}")
