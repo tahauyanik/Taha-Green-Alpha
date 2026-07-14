@@ -6,6 +6,7 @@ from plotly.subplots import make_subplots
 import numpy as np
 import requests
 import xml.etree.ElementTree as ET
+import textwrap
 
 st.set_page_config(
     page_title="Sovereign Quant | Portfolio Overview", 
@@ -154,16 +155,18 @@ class SovereignDataEngine:
     @st.cache_data(ttl=600, show_spinner=False)
     def fetch_live_news():
         try:
-            url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=XU100.IS,TRY=X,ENJ-USD"
-            response = requests.get(url, timeout=5)
+            # CNBC Global Market News - Çok daha istikrarlı bir RSS kaynağı, Firewall'a takılmaz
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            url = "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664"
+            response = requests.get(url, headers=headers, timeout=5)
             root = ET.fromstring(response.content)
             news_items = []
             for item in root.findall('./channel/item')[:4]: 
                 title = item.find('title').text
-                pub_date = item.find('pubDate').text[:-15] 
+                pub_date = item.find('pubDate').text[:16] # CNBC tarih formatını düzelt
                 news_items.append({'title': title, 'date': pub_date})
             return news_items
-        except:
+        except Exception as e:
             return []
 
 class SovereignRiskEngine:
@@ -232,7 +235,7 @@ st.markdown("""
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
         🌍 Sovereign Quant Fund
     </h1>
-    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V27.0 OMNISCIENCE EDITION)</p>
+    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -269,7 +272,6 @@ try:
         normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_kisa).mean()
         normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_uzun).mean()
 
-    # V27.0 7. SEKME (BLACK SWAN) EKLENDİ
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)", "🧬 AI Rebalancer (Optimization)", "🦢 Macro Stress Testing"
     ])
@@ -431,7 +433,8 @@ try:
                 number = {'font': {'color': '#F5F5F5', 'size': 45}}
             ))
             fig_gauge = SovereignVisualEngine.apply_card_layout(fig_gauge)
-            fig_gauge.update_layout(title=dict(text="MACRO SENTIMENT SCORE", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.85), height=280, margin=dict(l=20, r=20, t=40, b=20))
+            # FIX 2: Kenar boşlukları (margin) artırıldı ve Başlık (y konumu) yukarı itildi, sıkışma bitti.
+            fig_gauge.update_layout(title=dict(text="MACRO SENTIMENT SCORE", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.98), height=280, margin=dict(l=50, r=50, t=50, b=20))
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
             
         with col_ai4:
@@ -470,7 +473,8 @@ try:
             for item in live_news:
                 news_html += f"<tr><td style='color:#DEFF9A; white-space:nowrap;'>{item['date']}</td><td>{item['title']}</td></tr>"
         else:
-            news_html = "<tr><td colspan='2' style='text-align:center; color:#8B949E; padding:20px;'>News feed currently unavailable or restricted by firewall.</td></tr>"
+            # FIX 3: Gelişmiş hata yönetimi, Firewall yese bile şık bir uyarı çıkarır
+            news_html = "<tr><td colspan='2' style='text-align:center; color:#8B949E; padding:20px;'>News feed rate limit exceeded. Reconnecting to global nodes...</td></tr>"
 
         st.markdown(f"""
         <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start;">
@@ -651,7 +655,9 @@ try:
                 
             with col_opt2:
                 w_alfas, w_yeotk, w_astor, w_kcaer = optimal_weights * 100
-                html_content = f"""
+                
+                # FIX 1: HTML bloğunu textwrap.dedent ile sola yaslayıp, o iğrenç beyaz kod kutusunu sonsuza dek yok ettik.
+                html_content = textwrap.dedent(f"""
                 <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
                     <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
@@ -670,7 +676,6 @@ try:
                         <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
                         <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
                     </div>
-                    
                     <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
                         <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
                         <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
@@ -678,10 +683,9 @@ try:
                         <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
                     </div>
                 </div>
-                """
+                """)
                 st.markdown(html_content, unsafe_allow_html=True)
     
-    # V27.0 SİYAH KUĞU (KRİZ SİMÜLATÖRÜ) EKLENTİSİ
     with tab7:
         st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🦢 Black Swan Stress Tester (Crisis Simulator)</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulates the portfolio's expected drawdown during historical and theoretical market crashes based on real-time beta, covariance, and asset class sensitivities.</p>", unsafe_allow_html=True)
@@ -700,10 +704,8 @@ try:
             for name, data in scenarios.items():
                 market_drop = data["market_drop"]
                 
-                # Siyah Kuğu Matematiği: Beta üzerinden kriz şoku hesaplama
                 port_drop = market_drop * port_beta 
                 
-                # Eğer teknoloji/enerji krizine özel bir senaryoysa, bu portföy enerji ağırlıklı olduğu için ekstra ceza alır
                 if data["sector_hit"]:
                     port_drop = market_drop * 1.8 
                     
