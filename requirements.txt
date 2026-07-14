@@ -1,4 +1,6 @@
-streamlit
-yfinance
-pandas
-plotly
+streamlit==1.36.0
+yfinance==0.2.40
+pandas==2.2.2
+plotly==5.22.0
+numpy==1.26.4
+requests==2.32.3
