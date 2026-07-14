@@ -153,15 +153,14 @@ class SovereignDataEngine:
     @staticmethod
     @st.cache_data(ttl=600, show_spinner=False)
     def fetch_live_news():
-        # Ücretsiz, API Key gerektirmeyen RSS Haber Akışı (Yahoo Finance Global Market)
         try:
             url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=XU100.IS,TRY=X,ENJ-USD"
             response = requests.get(url, timeout=5)
             root = ET.fromstring(response.content)
             news_items = []
-            for item in root.findall('./channel/item')[:4]: # Son 4 haberi al
+            for item in root.findall('./channel/item')[:4]: 
                 title = item.find('title').text
-                pub_date = item.find('pubDate').text[:-15] # Tarihi formatla
+                pub_date = item.find('pubDate').text[:-15] 
                 news_items.append({'title': title, 'date': pub_date})
             return news_items
         except:
@@ -233,7 +232,7 @@ st.markdown("""
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
         🌍 Sovereign Quant Fund
     </h1>
-    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V25.0 BLOOMBERG EDITION)</p>
+    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V26.0 OMNISCIENCE EDITION)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -270,9 +269,9 @@ try:
         normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_kisa).mean()
         normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_uzun).mean()
 
-    # V25.0 BLOOMBERG TERMINOLOJİSİ
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)"
+    # V26.0 6. SEKME (AI REBALANCER) EKLENDİ
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)", "🧬 AI Rebalancer (Optimization)"
     ])
 
     with tab1:
@@ -361,7 +360,6 @@ try:
     with tab3:
         st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🕵️ Real-Time Signal Engine & Flow Analytics</h3>", unsafe_allow_html=True)
         
-        # Gerçek Veriye Dayalı Sentiment Hesaplama
         try:
             mean_rsi = h_rsi.dropna().iloc[-1]
             son_fiyat = normalize_veri['SOVEREIGN_PORTFOLIO'].iloc[-1]
@@ -437,14 +435,13 @@ try:
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
             
         with col_ai4:
-            # Gerçek Zamanlı Hacim Anomalisi Tespit Algoritması
             anomalies = []
             for ticker in hisseler[:-1]:
                 if not vol_data[ticker].empty and len(vol_data[ticker]) > 20:
                     last_vol = vol_data[ticker].iloc[-1]
                     avg_vol_20 = vol_data[ticker].rolling(20).mean().iloc[-1]
                     
-                    if last_vol > (avg_vol_20 * 1.5): # %150 hacim artışı
+                    if last_vol > (avg_vol_20 * 1.5): 
                         etki = "Positive Flow" if close_data[ticker].iloc[-1] > open_data[ticker].iloc[-1] else "Selling Pressure"
                         renk_hacim = "#DEFF9A" if "Positive" in etki else "#FF4C4C"
                         anomalies.append(f"<tr><td>{ticker}</td><td style='color:{renk_hacim}; font-weight:bold;'>VOLUME ANOMALY DETECTED</td><td>{int(last_vol):,}</td><td>{etki}</td></tr>")
@@ -465,7 +462,6 @@ try:
             </div>
             """, unsafe_allow_html=True)
             
-        # V25.0 CANLI HABER AKIŞI (RSS)
         st.markdown("<div style='height: 34px;'></div>", unsafe_allow_html=True)
         live_news = SovereignDataEngine.fetch_live_news()
         
@@ -594,6 +590,96 @@ try:
             fig_mc = SovereignVisualEngine.apply_premium_layout(fig_mc)
             fig_mc.update_layout(height=650, yaxis_title="Capital (TL)", xaxis_title="Future Trading Days (252 Days)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig_mc, use_container_width=True, config={'displayModeBar': False})
+
+    # V26.0 MARKOWITZ OTONOM OPTİMİZASYON EKLENTİSİ
+    with tab6:
+        st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🧬 Autonomous Portfolio Optimization (Markowitz Efficient Frontier)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulates 5,000 unique asset allocations using Modern Portfolio Theory (MPT). The engine calculates the Covariance Matrix and historical log-returns to find the 'Max Sharpe Ratio' portfolio, providing the exact mathematical weights needed to maximize return for a given unit of risk.</p>", unsafe_allow_html=True)
+        
+        if len(getiriler) > 0:
+            log_ret = np.log1p(close_data[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].pct_change()).dropna()
+            
+            num_ports = 5000
+            all_weights = np.zeros((num_ports, 4))
+            ret_arr = np.zeros(num_ports)
+            vol_arr = np.zeros(num_ports)
+            sharpe_arr = np.zeros(num_ports)
+
+            mean_log_ret = log_ret.mean()
+            cov_mat = log_ret.cov()
+
+            np.random.seed(42) 
+            for x in range(num_ports):
+                weights = np.array(np.random.random(4))
+                weights = weights / np.sum(weights)
+                all_weights[x,:] = weights
+                
+                ret_arr[x] = np.sum((mean_log_ret * weights) * 252)
+                vol_arr[x] = np.sqrt(np.dot(weights.T, np.dot(cov_mat * 252, weights)))
+                sharpe_arr[x] = ret_arr[x] / vol_arr[x] if vol_arr[x] > 0 else 0
+
+            max_sr_idx = sharpe_arr.argmax()
+            max_sr_ret = ret_arr[max_sr_idx]
+            max_sr_vol = vol_arr[max_sr_idx]
+            optimal_weights = all_weights[max_sr_idx]
+
+            min_vol_idx = vol_arr.argmin()
+            min_vol_ret = ret_arr[min_vol_idx]
+            min_vol_vol = vol_arr[min_vol_idx]
+
+            col_opt1, col_opt2 = st.columns([1.618, 1], gap="large")
+            
+            with col_opt1:
+                fig_opt = go.Figure()
+                fig_opt.add_trace(go.Scatter(
+                    x=vol_arr * 100, y=ret_arr * 100, mode='markers',
+                    marker=dict(color=sharpe_arr, colorscale='Viridis', showscale=True, size=4, line=dict(width=0), colorbar=dict(title="Sharpe")),
+                    name='Simulated Portfolios', hoverinfo='skip'
+                ))
+                fig_opt.add_trace(go.Scatter(
+                    x=[max_sr_vol * 100], y=[max_sr_ret * 100], mode='markers',
+                    marker=dict(color='#FF4C4C', size=16, symbol='star', line=dict(color='#0A0C12', width=2)),
+                    name='Max Sharpe (Optimal)'
+                ))
+                fig_opt.add_trace(go.Scatter(
+                    x=[min_vol_vol * 100], y=[min_vol_ret * 100], mode='markers',
+                    marker=dict(color='#3B82F6', size=16, symbol='star', line=dict(color='#0A0C12', width=2)),
+                    name='Min Volatility (Safest)'
+                ))
+                fig_opt = SovereignVisualEngine.apply_premium_layout(fig_opt)
+                fig_opt.update_layout(height=450, xaxis_title="Annualized Volatility (Risk) %", yaxis_title="Expected Annual Return %", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                st.plotly_chart(fig_opt, use_container_width=True, config={'displayModeBar': False})
+                
+            with col_opt2:
+                w_alfas, w_yeotk, w_astor, w_kcaer = optimal_weights * 100
+                st.markdown(f"""
+                <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
+                    <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ALFAS.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_alfas:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">YEOTK.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_yeotk:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ASTOR.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_astor:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:21px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
+                    </div>
+                    
+                    <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
+                        <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
+                        <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
+                        <span style="color: #8B949E; font-size: 11px;">OPTIMIZED VOLATILITY: </span>
+                        <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
 except Exception as e:
     st.error(f"Sistem Kritik Bir Hata Yakaladı: {e}")
