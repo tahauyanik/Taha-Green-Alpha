@@ -232,7 +232,7 @@ st.markdown("""
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
         🌍 Sovereign Quant Fund
     </h1>
-    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V26.0 OMNISCIENCE EDITION)</p>
+    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V27.0 OMNISCIENCE EDITION)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -269,9 +269,9 @@ try:
         normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_kisa).mean()
         normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_uzun).mean()
 
-    # V26.0 6. SEKME (AI REBALANCER) EKLENDİ
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)", "🧬 AI Rebalancer (Optimization)"
+    # V27.0 7. SEKME (BLACK SWAN) EKLENDİ
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)", "🧬 AI Rebalancer (Optimization)", "🦢 Macro Stress Testing"
     ])
 
     with tab1:
@@ -591,7 +591,6 @@ try:
             fig_mc.update_layout(height=650, yaxis_title="Capital (TL)", xaxis_title="Future Trading Days (252 Days)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig_mc, use_container_width=True, config={'displayModeBar': False})
 
-    # V26.0 MARKOWITZ OTONOM OPTİMİZASYON EKLENTİSİ
     with tab6:
         st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🧬 Autonomous Portfolio Optimization (Markowitz Efficient Frontier)</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulates 5,000 unique asset allocations using Modern Portfolio Theory (MPT). The engine calculates the Covariance Matrix and historical log-returns to find the 'Max Sharpe Ratio' portfolio, providing the exact mathematical weights needed to maximize return for a given unit of risk.</p>", unsafe_allow_html=True)
@@ -652,37 +651,86 @@ try:
                 
             with col_opt2:
                 w_alfas, w_yeotk, w_astor, w_kcaer = optimal_weights * 100
-                
-                # HTML kodunun başındaki boşluklar Markdown hatasını önlemek için silindi
                 html_content = f"""
-<div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
-    <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ALFAS.IS</span>
-        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_alfas:.1f}</span>
-    </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">YEOTK.IS</span>
-        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_yeotk:.1f}</span>
-    </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ASTOR.IS</span>
-        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_astor:.1f}</span>
-    </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:21px;">
-        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
-        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
-    </div>
-    
-    <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
-        <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
-        <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
-        <span style="color: #8B949E; font-size: 11px;">OPTIMIZED VOLATILITY: </span>
-        <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
-    </div>
-</div>
-"""
+                <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
+                    <div class="glass-metric-title" style="margin-bottom: 21px; color:#DEFF9A; letter-spacing:1px;">RECOMMENDED ALLOCATION (MAX SHARPE)</div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ALFAS.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_alfas:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">YEOTK.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_yeotk:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">ASTOR.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_astor:.1f}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:21px;">
+                        <span style="color:#F5F5F5; font-weight:600; font-family:'JetBrains Mono', monospace;">KCAER.IS</span>
+                        <span style="color:#DEFF9A; font-weight:800; font-size:16px;">% {w_kcaer:.1f}</span>
+                    </div>
+                    
+                    <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
+                        <span style="color: #8B949E; font-size: 11px;">EXPECTED ANNUAL RETURN: </span>
+                        <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_ret * 100:.1f}</span><br>
+                        <span style="color: #8B949E; font-size: 11px;">OPTIMIZED VOLATILITY: </span>
+                        <span style="color: #FF4C4C; font-size: 13px; font-weight: 600; margin-left:5px;">%{max_sr_vol * 100:.1f}</span>
+                    </div>
+                </div>
+                """
                 st.markdown(html_content, unsafe_allow_html=True)
+    
+    # V27.0 SİYAH KUĞU (KRİZ SİMÜLATÖRÜ) EKLENTİSİ
+    with tab7:
+        st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🦢 Black Swan Stress Tester (Crisis Simulator)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulates the portfolio's expected drawdown during historical and theoretical market crashes based on real-time beta, covariance, and asset class sensitivities.</p>", unsafe_allow_html=True)
+        
+        if 'beta' in locals():
+            scenarios = {
+                "2020 Global Pandemic": {"market_drop": -0.342, "desc": "Widespread panic, liquidity freeze.", "color": "#FF4C4C", "sector_hit": False},
+                "Local Macro Shock (Rate Hike)": {"market_drop": -0.225, "desc": "Sudden monetary policy shift.", "color": "#F59E0B", "sector_hit": False},
+                "Tech/Energy Sector Meltdown": {"market_drop": -0.158, "desc": "Targeted sector crash, high beta hit.", "color": "#8B949E", "sector_hit": True}
+            }
+            
+            port_beta = beta
+            
+            cols = st.columns(3, gap="large")
+            idx = 0
+            for name, data in scenarios.items():
+                market_drop = data["market_drop"]
+                
+                # Siyah Kuğu Matematiği: Beta üzerinden kriz şoku hesaplama
+                port_drop = market_drop * port_beta 
+                
+                # Eğer teknoloji/enerji krizine özel bir senaryoysa, bu portföy enerji ağırlıklı olduğu için ekstra ceza alır
+                if data["sector_hit"]:
+                    port_drop = market_drop * 1.8 
+                    
+                port_retained = 100000 * (1 + port_drop)
+                diff_from_market = (market_drop - port_drop) * 100 
+                
+                with cols[idx]:
+                    st.markdown(f"""
+                    <div class="glass-metric-card" style="padding: 24px; border-top: 2px solid {data['color']};">
+                        <div style="color:{data['color']}; font-size:12px; font-weight:bold; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase;">{name}</div>
+                        <div style="color:#8B949E; font-size:11px; margin-bottom:16px;">{data['desc']}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                            <div>
+                                <div style="color:#8B949E; font-size:11px; margin-bottom:4px;">Expected Drawdown</div>
+                                <div style="color:#F5F5F5; font-size:24px; font-weight:800;">%{port_drop*100:.1f}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="color:#8B949E; font-size:11px; margin-bottom:4px;">Capital Retained</div>
+                                <div style="color:#F5F5F5; font-size:16px; font-weight:600; font-family:'JetBrains Mono', monospace;">{port_retained:,.0f} ₺</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05); font-size:11px; color:{'#DEFF9A' if diff_from_market > 0 else '#FF4C4C'}; font-weight:600;">
+                            {'Outperforms' if diff_from_market > 0 else 'Underperforms'} Market by %{abs(diff_from_market):.1f}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                idx += 1
 
 except Exception as e:
     st.error(f"Sistem Kritik Bir Hata Yakaladı: {e}")
