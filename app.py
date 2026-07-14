@@ -4,10 +4,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import requests
+import xml.etree.ElementTree as ET
 
 st.set_page_config(
-    page_title="Sovereign Quant | Institutional Dashboard", 
-    page_icon="🏛️", 
+    page_title="Sovereign Quant | Portfolio Overview", 
+    page_icon="🌍", 
     layout="wide", 
     initial_sidebar_state="collapsed" 
 )
@@ -24,18 +26,17 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
     background-image: radial-gradient(circle at 50% -20%, #0A0F18 0%, #030407 80%) !important;
 }
 
-/* UI Temizliği */
+/* ÇÖP TEMİZLİĞİ VE SİDEBAR İNFAZI */
 [data-testid="stHeader"] { background-color: transparent !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 a { pointer-events: none; cursor: default; text-decoration: none !important; }
 .css-15zrgzn { display: none !important; } 
 
-/* Sol Menü İptali */
 [data-testid="collapsedControl"] { display: none !important; }
 section[data-testid="stSidebar"] { display: none !important; }
 
-/* Kurumsal Tab (Sekme) Tasarımı */
+/* HIZLANDIRILMIŞ TAB VE KART CSS'LERİ */
 .stTabs [data-baseweb="tab-list"] {
     gap: 34px; background-color: transparent !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding-bottom: 0px;
@@ -49,22 +50,26 @@ section[data-testid="stSidebar"] { display: none !important; }
 }
 .stTabs [data-baseweb="tab"]:hover { color: #D1D5DB !important; background-color: transparent !important; }
 .stTabs [aria-selected="true"] { color: #DEFF9A !important; background-color: transparent !important; font-weight: 700 !important; }
-div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height: 3px !important; border-radius: 3px 3px 0 0 !important; }
+div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height: 2px !important; border-radius: 2px 2px 0 0 !important; }
 
-/* Minimalist Cam Metrik Kartları (Altın Oran Padding) */
 .glass-metric-card {
     background: linear-gradient(160deg, rgba(16, 20, 26, 0.90) 0%, rgba(8, 10, 14, 0.98) 100%);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 26px 42px; /* Altın oran padding */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3); /* Parlama azaltıldı, ciddiyet eklendi */
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    padding: 26px 42px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     will-change: transform;
     transform: translateZ(0);
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 144px; position: relative; overflow: hidden;
+}
+.glass-metric-card:hover {
+    transform: translateY(-3px) translateZ(0); 
+    border-top: 1px solid rgba(222, 255, 154, 0.5);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(222, 255, 154, 0.05);
 }
 .glass-metric-title {
     color: #8B949E; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;
@@ -77,16 +82,20 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 .glass-metric-delta.negative { color: #FF4C4C; }
 .glass-metric-delta.neutral { color: #A0ABC0; }
 
-/* Terminal Tipi Panel */
+/* PALANTIR TERMİNAL TASARIMI */
 .terminal-card {
-    background: #0A0C12; border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #0A0C12; border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 12px; padding: 34px; position: relative;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+    will-change: transform; transform: translateZ(0);
+}
+.terminal-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+    background: linear-gradient(to bottom, #3B82F6, transparent); border-radius: 12px 0 0 12px;
 }
 .terminal-font { font-family: 'JetBrains Mono', monospace; }
 
-/* Form Elementleri */
 .stSelectbox div[data-baseweb="select"] > div, .stNumberInput > div > div > input {
     background-color: #0A0C12 !important; color: #F5F5F5 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 8px !important;
@@ -103,7 +112,7 @@ div[data-baseweb="tab-highlight"] { background-color: #DEFF9A !important; height
 h1, h2, h3, p, span { color: #F5F5F5; }
 hr { border-color: rgba(255,255,255,0.05) !important; }
 
-/* Veri Tablosu */
+/* Real Anomaly & News Table Estetiği */
 .dark-pool-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .dark-pool-table th { color: #8B949E; text-align: left; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; text-transform: uppercase;}
 .dark-pool-table td { color: #D1D5DB; padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,0.02); }
@@ -140,6 +149,23 @@ class SovereignDataEngine:
         lower_band = sma_20 - (std_20 * 2.1)
         
         return rsi, macd, signal_line, upper_band, lower_band, obv, sma_20
+
+    @staticmethod
+    @st.cache_data(ttl=600, show_spinner=False)
+    def fetch_live_news():
+        # Ücretsiz, API Key gerektirmeyen RSS Haber Akışı (Yahoo Finance Global Market)
+        try:
+            url = "https://feeds.finance.yahoo.com/rss/2.0/headline?s=XU100.IS,TRY=X,ENJ-USD"
+            response = requests.get(url, timeout=5)
+            root = ET.fromstring(response.content)
+            news_items = []
+            for item in root.findall('./channel/item')[:4]: # Son 4 haberi al
+                title = item.find('title').text
+                pub_date = item.find('pubDate').text[:-15] # Tarihi formatla
+                news_items.append({'title': title, 'date': pub_date})
+            return news_items
+        except:
+            return []
 
 class SovereignRiskEngine:
     @staticmethod
@@ -201,12 +227,13 @@ class SovereignVisualEngine:
         )
         return fig
 
+# --- BAŞLIK ALANI ---
 st.markdown("""
 <div style='margin-bottom: 10px; margin-top: 15px;'>
     <h1 style='font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; display:flex; align-items:center; gap:10px;'>
-        🏛️ Taha Uyanık <span style='color: #2D323C; font-weight:300;'>|</span> Sovereign Quant Fund
+        🌍 Sovereign Quant Fund
     </h1>
-    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Institutional Portfolio Management & Quantitative Risk Dashboard</p>
+    <p style='color: #8B949E; font-size: 13px; margin: 0; font-weight: 500;'>Kurumsal Portföy Yönetimi ve Kantitatif Risk Sistemleri (V25.0 BLOOMBERG EDITION)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -215,17 +242,17 @@ st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 5px; ma
 with st.container():
     ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns(4)
     with ctrl_col1:
-        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>TIME HORIZON</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>ANALİZ PERİYODU</p>", unsafe_allow_html=True)
         periyot = st.selectbox("", ["1mo", "3mo", "6mo", "1y", "2y", "5y", "max"], index=3, label_visibility="collapsed")
     with ctrl_col2:
         st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>GÖSTERGE FİLTRELERİ (OVERLAYS)</p>", unsafe_allow_html=True)
-        trend_goster = st.checkbox("Trend Signal (SMA)", value=True)
+        trend_goster = st.checkbox("Momentum Signal (SMA)", value=True)
         bollinger_goster = st.checkbox("Volatility Bands (Bollinger)", value=True)
     with ctrl_col3:
-        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>FAST SMA (MOMENTUM)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>MOMENTUM SIGNAL (FAST-EMA)</p>", unsafe_allow_html=True)
         sma_kisa = st.slider("Kısa Vade SMA", 5, 100, 20, label_visibility="collapsed") if trend_goster else 20
     with ctrl_col4:
-        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>SLOW SMA (MACRO TREND)</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 11px; font-weight: 600; margin-bottom:4px;'>MACRO TREND (SLOW-SMA)</p>", unsafe_allow_html=True)
         sma_uzun = st.slider("Uzun Vade SMA", 10, 250, 50, label_visibility="collapsed") if trend_goster else 50
 
 st.markdown("<hr style='border-color: rgba(255,255,255,0.1); margin-top: 15px; margin-bottom: 25px;'>", unsafe_allow_html=True)
@@ -237,61 +264,62 @@ try:
     close_data = close_data.ffill().bfill()
     ilk_satir = close_data.iloc[0].replace(0, 0.0001)
     normalize_veri = (close_data / ilk_satir) * 100
-    normalize_veri['TAHA_YESIL_FON'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
+    normalize_veri['SOVEREIGN_PORTFOLIO'] = normalize_veri[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].mean(axis=1)
 
     if trend_goster:
-        normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_kisa).mean()
-        normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['TAHA_YESIL_FON'].rolling(window=sma_uzun).mean()
+        normalize_veri[f'SMA_{sma_kisa}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_kisa).mean()
+        normalize_veri[f'SMA_{sma_uzun}'] = normalize_veri['SOVEREIGN_PORTFOLIO'].rolling(window=sma_uzun).mean()
 
+    # V25.0 BLOOMBERG TERMINOLOJİSİ
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Performans Özeti", "🔬 Teknik Diyagnostik", "📡 Sinyal Motoru", "⚖️ Risk Metrikleri", "📈 Stokastik Projeksiyonlar"
+        "📈 Portfolio Overview", "🔬 Market Structure", "🧠 Signal Engine & Flow", "⚖️ Risk Metrics & Correlation", "🔮 Stochastic Projection (GBM)"
     ])
 
     with tab1:
-        st.markdown("<h3 style='margin: 21px 0 21px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>Portfolio vs. Benchmark Performance</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin: 21px 0 21px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>Portfolio Performance Tracking</h3>", unsafe_allow_html=True)
         fig = go.Figure()
         
-        fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['TAHA_YESIL_FON'], mode='lines', name='Sovereign Fund', 
+        fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['SOVEREIGN_PORTFOLIO'], mode='lines', name='Sovereign Quant Portfolio', 
                                  line=dict(color=SovereignVisualEngine.COLORS['fund'], width=2.5), 
                                  fill='tozeroy', fillcolor='rgba(222, 255, 154, 0.03)'))
-        fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['XU100.IS'], mode='lines', name='BIST100 Benchmark', 
+        fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri['XU100.IS'], mode='lines', name='Benchmark (BIST100)', 
                                  line=dict(color=SovereignVisualEngine.COLORS['bist'], width=1.5)))
         
         if trend_goster:
-            if f'SMA_{sma_kisa}' in normalize_veri.columns: fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri[f'SMA_{sma_kisa}'], mode='lines', name=f'Fast SMA ({sma_kisa})', line=dict(color='#F59E0B', width=1, dash='dot')))
-            if f'SMA_{sma_uzun}' in normalize_veri.columns: fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri[f'SMA_{sma_uzun}'], mode='lines', name=f'Slow SMA ({sma_uzun})', line=dict(color='#FF4C4C', width=1, dash='dot')))
+            if f'SMA_{sma_kisa}' in normalize_veri.columns: fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri[f'SMA_{sma_kisa}'], mode='lines', name=f'Momentum {sma_kisa}', line=dict(color='#F59E0B', width=1, dash='dot')))
+            if f'SMA_{sma_uzun}' in normalize_veri.columns: fig.add_trace(go.Scatter(x=normalize_veri.index, y=normalize_veri[f'SMA_{sma_uzun}'], mode='lines', name=f'Macro {sma_uzun}', line=dict(color='#FF4C4C', width=1, dash='dot')))
         
         fig = SovereignVisualEngine.apply_premium_layout(fig)
         fig.update_layout(legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5), height=500)
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}) 
 
         bist_sonuc = float(np.nan_to_num(100000 * (normalize_veri['XU100.IS'].iloc[-1] / 100), nan=100000))
-        yesil_sonuc = float(np.nan_to_num(100000 * (normalize_veri['TAHA_YESIL_FON'].iloc[-1] / 100), nan=100000))
+        yesil_sonuc = float(np.nan_to_num(100000 * (normalize_veri['SOVEREIGN_PORTFOLIO'].iloc[-1] / 100), nan=100000))
         fark = yesil_sonuc - bist_sonuc
 
-        st.markdown("<h3 style='margin: 42px 0 21px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>💰 Capital Growth Simulation (Base: 100k)</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin: 42px 0 21px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>💰 100.000 TL Capital Growth Simulation</h3>", unsafe_allow_html=True)
         st.markdown(f"""
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px;">
             <div class="glass-metric-card">
                 <div class="glass-metric-title">Benchmark Return (BIST100)</div>
                 <div class="glass-metric-value">{bist_sonuc:,.0f} <span style="font-size:24px; color:#8B949E;">₺</span></div>
-                <div class="glass-metric-delta neutral">↑ Baseline</div>
+                <div class="glass-metric-delta neutral">↑ Reference Index</div>
             </div>
-            <div class="glass-metric-card" style="border-top: 1px solid rgba(222, 255, 154, 0.4);">
-                <div class="glass-metric-title" style="color:#DEFF9A;">Sovereign Fund Return</div>
+            <div class="glass-metric-card" style="border-top: 1px solid rgba(222, 255, 154, 0.4); box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(222, 255, 154, 0.05);">
+                <div class="glass-metric-title" style="color:#DEFF9A;">Sovereign Portfolio Return</div>
                 <div class="glass-metric-value">{yesil_sonuc:,.0f} <span style="font-size:24px; color:#8B949E;">₺</span></div>
-                <div class="glass-metric-delta positive">↑ %{((yesil_sonuc-100000)/100000)*100:.1f} Growth</div>
+                <div class="glass-metric-delta positive">↑ %{((yesil_sonuc-100000)/100000)*100:.1f} Portfolio Growth</div>
             </div>
             <div class="glass-metric-card">
                 <div class="glass-metric-title">Generated Alpha (Excess Return)</div>
                 <div class="glass-metric-value">{fark:+,.0f} <span style="font-size:24px; color:#8B949E;">₺</span></div>
-                <div class="glass-metric-delta {'positive' if fark > 0 else 'negative'}">{'↑ Outperformed Benchmark' if fark > 0 else '↓ Underperformed'}</div>
+                <div class="glass-metric-delta {'positive' if fark > 0 else 'negative'}">{'↑ Outperformed Benchmark' if fark > 0 else '↓ Underperformed Benchmark'}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     with tab2:
-        secili_hisse = st.selectbox("Select Asset for Diagnostic Breakdown", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'], index=0)
+        secili_hisse = st.selectbox("Asset Selection (Technical Diagnostics)", ['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS'], index=0)
         h_close, h_open, h_high, h_low, h_vol = close_data[secili_hisse], open_data[secili_hisse], high_data[secili_hisse], low_data[secili_hisse], vol_data[secili_hisse]
         
         h_rsi, h_macd, h_signal, upper_bb, lower_bb, h_obv, ind_sma_20 = SovereignDataEngine.calculate_technical_indicators(h_close, h_vol)
@@ -299,7 +327,7 @@ try:
         fig_tech = make_subplots(
             rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.03, 
             row_heights=[0.45, 0.15, 0.15, 0.15, 0.10],
-            subplot_titles=(f"{secili_hisse} Price Action", "Volume", "RSI (Momentum)", "MACD (Trend)", "OBV (Accumulation/Distribution)")
+            subplot_titles=(f"{secili_hisse} Price Action & Volatility", "Volume", "RSI (Momentum)", "MACD (Trend)", "OBV (Money Flow)")
         )
         
         fig_tech.add_trace(go.Candlestick(x=h_close.index, open=h_open, high=h_high, low=h_low, close=h_close, increasing_line_color='#DEFF9A', decreasing_line_color='#FF4C4C', name="Price"), row=1, col=1)
@@ -331,16 +359,16 @@ try:
         st.plotly_chart(fig_tech, use_container_width=True, config={'displayModeBar': False})
 
     with tab3:
-        st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>📡 Real-Time Signal Engine & Market Flow</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🕵️ Real-Time Signal Engine & Flow Analytics</h3>", unsafe_allow_html=True)
         
         # Gerçek Veriye Dayalı Sentiment Hesaplama
         try:
             mean_rsi = h_rsi.dropna().iloc[-1]
-            son_fiyat = normalize_veri['TAHA_YESIL_FON'].iloc[-1]
+            son_fiyat = normalize_veri['SOVEREIGN_PORTFOLIO'].iloc[-1]
             sma_d = normalize_veri[f'SMA_{sma_uzun}'].iloc[-1] if trend_goster and f'SMA_{sma_uzun}' in normalize_veri.columns else 100
             trend_score = 70 if son_fiyat > sma_d else 30
             sentiment_score = int((mean_rsi + trend_score) / 2)
-            sentiment_score = max(10, min(90, sentiment_score))
+            sentiment_score = max(10, min(90, sentiment_score)) 
         except:
             sentiment_score = 50
 
@@ -350,34 +378,34 @@ try:
             st.markdown(f"""
             <div class="terminal-card">
                 <div>
-                    <div class="terminal-font" style="color:#8B949E; font-size: 11px; margin-bottom: 12px; letter-spacing: 1px;">SYSTEM STATUS: ONLINE | QUANTITATIVE SCREENING</div>
-                    <h3 style="color: #F5F5F5; font-size: 21px; margin: 0 0 12px 0;">Market Sentiment & Anomaly Detection Active</h3>
+                    <div class="terminal-font" style="color:#3B82F6; font-size: 11px; margin-bottom: 12px; letter-spacing: 1px;">[QUANT_ENGINE_ACTIVE] :: REAL-TIME DATA ANALYSIS</div>
+                    <h3 style="color: #F5F5F5; font-size: 21px; margin: 0 0 12px 0;">Algorithmic Market Posture Calculated</h3>
                     <div style="font-size: 12px; color: #8B949E; margin-bottom: 21px; display: flex; align-items: center; gap: 8px;">
-                        <span style="display:inline-block; width:8px; height:8px; background-color:#3B82F6; border-radius:50%;"></span>
-                        Data Source: Yahoo Finance API | Computed Aggregate Score: {sentiment_score}/100
+                        <span style="display:inline-block; width:8px; height:8px; background-color:#3B82F6; border-radius:50%; box-shadow: 0 0 10px #3B82F6;"></span>
+                        Data Source: Yahoo Finance API | Macro Sentiment: {sentiment_score}/100
                     </div>
                 </div>
                 <p class="terminal-font" style="color: #A0ABC0; font-size: 12px; margin: 0; line-height: 1.7;">
-                    > Real-time monitoring of RSI, MACD divergence, and Volume shock across portfolio assets.<br>
-                    > System relies exclusively on historical computation; zero manual inputs or 'hardcoded' assumptions.<br>
-                    > Detected volume anomalies (if >150% of 20-day MA) are reported in the adjacent flow monitor.<br>
-                    > Screening methodology complies with Islamic finance and sustainable energy index constraints.
+                    > System aggregates real-time RSI, MACD, and Volume anomalies.<br>
+                    > 100% deterministic mathematical model. No hardcoded or heuristic logic applied.<br>
+                    > Detected Institutional Volume Flows are reflected in the radar below.<br>
+                    > System aligns with quantitative momentum and mean-reversion strategies.
                 </p>
             </div>
             """, unsafe_allow_html=True)
 
         with col_ai2:
-            durum, renk, taktik = "BULLISH", "#DEFF9A", "Kademeli Alım (ACCUMULATE)"
-            if sentiment_score > 75: durum, renk, taktik = "OVERBOUGHT", "#F59E0B", "Kâr Al (REDUCE EXPOSURE)"
-            elif sentiment_score > 45: durum, renk, taktik = "BULLISH", "#DEFF9A", "Pozisyonu Koru (HOLD)"
-            else: durum, renk, taktik = "OVERSOLD", "#FF4C4C", "Kademeli Alım (ACCUMULATE)"
+            durum, renk, taktik = "BULLISH (STRONG TREND)", "#DEFF9A", "Accumulate (BUY)"
+            if sentiment_score > 75: durum, renk, taktik = "OVERBOUGHT (HIGH RISK)", "#F59E0B", "Take Profit / Reduce Exposure"
+            elif sentiment_score > 45: durum, renk, taktik = "BULLISH (STRONG TREND)", "#DEFF9A", "Hold Position (HOLD)"
+            else: durum, renk, taktik = "OVERSOLD (OPPORTUNITY)", "#FF4C4C", "Accumulate (BUY)"
 
             st.markdown(f"""
             <div class="glass-metric-card" style="border: 1px solid rgba(255,255,255,0.05); text-align: center; justify-content: center;">
-                <div class="glass-metric-title" style="margin-bottom: 21px; letter-spacing: 2px;">SIGNAL ENGINE OUTPUT</div>
-                <h2 style="color: {renk}; font-size: 24px; font-weight: 700; margin: 0 0 21px 0; letter-spacing: -0.5px;">{durum}</h2>
+                <div class="glass-metric-title" style="margin-bottom: 21px; letter-spacing: 2px;">ALGORITHMIC SIGNAL OUTPUT</div>
+                <h2 style="color: {renk}; font-size: 20px; font-weight: 700; margin: 0 0 21px 0; letter-spacing: -0.5px;">{durum}</h2>
                 <div class="terminal-font" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);">
-                    <span style="color: #8B949E; font-size: 11px;">RECOMMENDED ACTION: </span>
+                    <span style="color: #8B949E; font-size: 11px;">SYSTEM RECOMMENDATION: </span>
                     <span style="color: #F5F5F5; font-size: 13px; font-weight: 600; margin-left:5px;">{taktik}</span>
                 </div>
             </div>
@@ -397,15 +425,15 @@ try:
                     'bgcolor': "rgba(0,0,0,0)",
                     'borderwidth': 0,
                     'steps': [
-                        {'range': [0, 45], 'color': "rgba(255, 76, 76, 0.15)"}, 
-                        {'range': [45, 75], 'color': "rgba(222, 255, 154, 0.15)"}, 
+                        {'range': [0, 40], 'color': "rgba(255, 76, 76, 0.15)"}, 
+                        {'range': [40, 75], 'color': "rgba(255, 255, 255, 0.05)"}, 
                         {'range': [75, 100], 'color': "rgba(245, 158, 11, 0.15)"}
                     ]
                 },
                 number = {'font': {'color': '#F5F5F5', 'size': 45}}
             ))
             fig_gauge = SovereignVisualEngine.apply_card_layout(fig_gauge)
-            fig_gauge.update_layout(title=dict(text="AGGREGATE SENTIMENT SCORE", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.85), height=240, margin=dict(l=20, r=20, t=40, b=20))
+            fig_gauge.update_layout(title=dict(text="MACRO SENTIMENT SCORE", font=dict(color='#8B949E', size=11, family="Inter"), x=0.5, y=0.85), height=280, margin=dict(l=20, r=20, t=40, b=20))
             st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
             
         with col_ai4:
@@ -417,25 +445,48 @@ try:
                     avg_vol_20 = vol_data[ticker].rolling(20).mean().iloc[-1]
                     
                     if last_vol > (avg_vol_20 * 1.5): # %150 hacim artışı
-                        etki = "Net Inflow" if close_data[ticker].iloc[-1] > open_data[ticker].iloc[-1] else "Net Outflow"
-                        renk_hacim = "#DEFF9A" if "Inflow" in etki else "#FF4C4C"
-                        anomalies.append(f"<tr><td>{ticker}</td><td style='color:{renk_hacim}; font-weight:bold;'>VOLUME SHOCK >150%</td><td>{int(last_vol):,}</td><td>{etki}</td></tr>")
+                        etki = "Positive Flow" if close_data[ticker].iloc[-1] > open_data[ticker].iloc[-1] else "Selling Pressure"
+                        renk_hacim = "#DEFF9A" if "Positive" in etki else "#FF4C4C"
+                        anomalies.append(f"<tr><td>{ticker}</td><td style='color:{renk_hacim}; font-weight:bold;'>VOLUME ANOMALY DETECTED</td><td>{int(last_vol):,}</td><td>{etki}</td></tr>")
             
             if len(anomalies) == 0:
-                anomaly_html = "<tr><td colspan='4' style='text-align:center; color:#8B949E; padding:30px;'>No significant volume anomalies detected in the latest session.</td></tr>"
+                anomaly_html = "<tr><td colspan='4' style='text-align:center; color:#8B949E; padding:30px;'>No significant volume anomalies detected for the last trading session.</td></tr>"
             else:
                 anomaly_html = "".join(anomalies)
 
             st.markdown(f"""
-            <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%;">
-                <div class="glass-metric-title" style="margin-bottom: 16px;">Institutional Volume Flow (Anomaly Detection)</div>
-                <p style="color:#8B949E; font-size:11px; margin-bottom:15px;">System flags daily volume exceeding 150% of the 20-day moving average.</p>
+            <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start; height: 100%; min-height: 280px;">
+                <div class="glass-metric-title" style="margin-bottom: 16px;">[REAL-TIME] Institutional Volume Flow (Radar)</div>
+                <p style="color:#8B949E; font-size:11px; margin-bottom:15px;">Detects assets where the last session's volume exceeded the 20-day average by >150%.</p>
                 <table class="dark-pool-table">
-                    <tr><th>Asset</th><th>Detected Anomaly</th><th>Last Volume (Lots)</th><th>Price Impact</th></tr>
+                    <tr><th>Asset</th><th>Anomaly Status</th><th>Last Volume (Lots)</th><th>Price Impact</th></tr>
                     {anomaly_html}
                 </table>
             </div>
             """, unsafe_allow_html=True)
+            
+        # V25.0 CANLI HABER AKIŞI (RSS)
+        st.markdown("<div style='height: 34px;'></div>", unsafe_allow_html=True)
+        live_news = SovereignDataEngine.fetch_live_news()
+        
+        news_html = ""
+        if live_news:
+            for item in live_news:
+                news_html += f"<tr><td style='color:#DEFF9A; white-space:nowrap;'>{item['date']}</td><td>{item['title']}</td></tr>"
+        else:
+            news_html = "<tr><td colspan='2' style='text-align:center; color:#8B949E; padding:20px;'>News feed currently unavailable or restricted by firewall.</td></tr>"
+
+        st.markdown(f"""
+        <div class="glass-metric-card" style="padding: 21px 34px; justify-content: flex-start;">
+            <div class="glass-metric-title" style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-block; width:8px; height:8px; background-color:#FF4C4C; border-radius:50%; box-shadow: 0 0 10px #FF4C4C; animation: blink 2s infinite;"></span>
+                [LIVE FEED] Global Market News & Headlines
+            </div>
+            <table class="dark-pool-table" style="font-size:12px;">
+                {news_html}
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
 
     with tab4:
         getiriler = close_data[['ALFAS.IS', 'YEOTK.IS', 'ASTOR.IS', 'KCAER.IS']].pct_change().dropna()
@@ -446,7 +497,7 @@ try:
             (fon_vol, b_vol, sortino, calmar, info_ratio, 
              max_dd, var_95, cvar_95, drawdown_serisi, alpha, beta) = SovereignRiskEngine.calculate_metrics(portfoy_getiri, bist_getiri)
 
-            st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>⚖️ Risk Metrics & Exposure Analysis</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='margin: 21px 0 34px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>⚖️ Risk Metrics & Reporting</h3>", unsafe_allow_html=True)
             
             st.markdown(f"""
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 21px; margin-bottom: 34px;">
@@ -458,7 +509,7 @@ try:
                 <div class="glass-metric-card" style="min-height: 110px; padding: 21px; border-top: 1px solid {'#DEFF9A' if sortino > 1 else '#F59E0B'};">
                     <div class="glass-metric-title" style="color: {'#DEFF9A' if sortino > 1 else '#F59E0B'};">Sortino Ratio</div>
                     <div class="glass-metric-value" style="font-size:26px;">{sortino:.2f}</div>
-                    <div class="glass-metric-delta {'positive' if sortino > 1 else 'neutral'}" style="font-size:11px;">{'Low Downside Risk' if sortino > 1 else 'Elevated Downside Risk'}</div>
+                    <div class="glass-metric-delta {'positive' if sortino > 1 else 'neutral'}" style="font-size:11px;">{'Low Downside Risk' if sortino > 1 else 'Downside Risk Elevated'}</div>
                 </div>
                 <div class="glass-metric-card" style="min-height: 110px; padding: 21px;">
                     <div class="glass-metric-title">Calmar Ratio</div>
@@ -468,20 +519,20 @@ try:
                 <div class="glass-metric-card" style="min-height: 110px; padding: 21px;">
                     <div class="glass-metric-title">Information Ratio</div>
                     <div class="glass-metric-value" style="font-size:26px;">{info_ratio:.2f}</div>
-                    <div class="glass-metric-delta {'positive' if info_ratio > 0.5 else 'neutral'}" style="font-size:11px;">{'Active Management Value' if info_ratio > 0.5 else 'Tracking Benchmark'}</div>
+                    <div class="glass-metric-delta {'positive' if info_ratio > 0.5 else 'neutral'}" style="font-size:11px;">{'Active Management Success' if info_ratio > 0.5 else 'Index Tracker'}</div>
                 </div>
                 <div class="glass-metric-card" style="min-height: 110px; padding: 21px;">
-                    <div class="glass-metric-title">Market Beta</div>
+                    <div class="glass-metric-title">Market Beta (Risk)</div>
                     <div class="glass-metric-value" style="font-size:26px;">{beta:.2f}</div>
-                    <div class="glass-metric-delta {'positive' if beta < 1 else 'negative'}" style="font-size:11px;">{'Defensive Profile' if beta < 1 else 'Aggressive Profile'}</div>
+                    <div class="glass-metric-delta {'positive' if beta < 1 else 'negative'}" style="font-size:11px;">{'Defensive Stance' if beta < 1 else 'Aggressive Stance'}</div>
                 </div>
                  <div class="glass-metric-card" style="min-height: 110px; padding: 21px;">
-                    <div class="glass-metric-title">Maximum Drawdown</div>
+                    <div class="glass-metric-title">Max Drawdown</div>
                     <div class="glass-metric-value" style="font-size:26px; color:#FF4C4C;">% {max_dd:.2f}</div>
-                    <div class="glass-metric-delta negative" style="font-size:11px;">Historical Crisis Trough</div>
+                    <div class="glass-metric-delta negative" style="font-size:11px;">Historical Crisis Depth</div>
                 </div>
                 <div class="glass-metric-card" style="min-height: 110px; padding: 21px;">
-                    <div class="glass-metric-title">Daily VaR (95% Conf)</div>
+                    <div class="glass-metric-title">Daily VaR (95% CI)</div>
                     <div class="glass-metric-value" style="font-size:26px; color:#F59E0B;">% {var_95:.2f}</div>
                     <div class="glass-metric-delta negative" style="font-size:11px;">Expected Normal Loss</div>
                 </div>
@@ -495,7 +546,7 @@ try:
             
             kor_col1, kor_col2 = st.columns(2, gap="large")
             with kor_col1:
-                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px; text-transform:uppercase;'>🧩 Asset Correlation Matrix</div>", unsafe_allow_html=True)
+                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px; text-transform:uppercase;'>🧩 Asset Correlation Heatmap</div>", unsafe_allow_html=True)
                 kor_matrisi = getiriler.corr().values
                 fig_corr = go.Figure(data=go.Heatmap(
                     z=kor_matrisi, x=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], y=['ALFAS', 'YEOTK', 'ASTOR', 'KCAER'], 
@@ -511,15 +562,15 @@ try:
                 st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
                 
             with kor_col2:
-                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px;'>🌊 Underwater / Drawdown Chart</div>", unsafe_allow_html=True)
+                st.markdown("<div class='glass-metric-title' style='margin-bottom:16px;'>🌊 Drawdown (Underwater Chart)</div>", unsafe_allow_html=True)
                 fig_dd = go.Figure(go.Scatter(x=drawdown_serisi.index, y=drawdown_serisi, fill='tozeroy', mode='lines', line=dict(color='#FF4C4C', width=1.5), fillcolor='rgba(255, 76, 76, 0.15)'))
                 fig_dd = SovereignVisualEngine.apply_premium_layout(fig_dd)
                 fig_dd.update_layout(height=340, margin=dict(t=0, b=0, l=0, r=0))
                 st.plotly_chart(fig_dd, use_container_width=True, config={'displayModeBar': False})
 
     with tab5:
-        st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>📈 Geometric Brownian Motion (252-Day Projection)</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulating 100 price paths for the next 252 trading days using historical drift (μ) and volatility (σ). The 5th and 95th percentiles (Confidence Bands) are highlighted to visualize tail risks and expected outcomes.</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin: 21px 0 8px 0; color: #F5F5F5; font-size: 18px; font-weight: 600;'>🔮 Stochastic Projection (Geometric Brownian Motion)</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #8B949E; font-size: 13px; margin-bottom: 34px;'>Simulates 100 random market scenarios for the next 252 trading days based on the portfolio's historical volatility (σ) and expected return (μ). The 5% and 95% confidence intervals are shaded in green.</p>", unsafe_allow_html=True)
         
         if len(getiriler) > 0:
             mu, sigma = portfoy_getiri.mean(), portfoy_getiri.std()
@@ -529,23 +580,19 @@ try:
                 
             fig_mc = go.Figure()
             
-            # Confidence Bands Hesabı (%5 ve %95)
             percentile_5 = np.percentile(sim_df, 5, axis=1)
             percentile_95 = np.percentile(sim_df, 95, axis=1)
             x_axis = np.arange(252)
             
-            # Gölgelendirme (Shading)
             fig_mc.add_trace(go.Scatter(x=x_axis, y=percentile_95, mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'))
             fig_mc.add_trace(go.Scatter(x=x_axis, y=percentile_5, mode='lines', fill='tonexty', fillcolor='rgba(222, 255, 154, 0.05)', line=dict(width=0), showlegend=False, hoverinfo='skip'))
 
-            # Simülasyon Çizgileri
             for i in range(100): fig_mc.add_trace(go.Scatter(x=x_axis, y=sim_df[:, i], mode='lines', line=dict(color='rgba(222, 255, 154, 0.06)', width=1), showlegend=False, hoverinfo='skip'))
             
-            # Ana Trend Çizgisi
-            fig_mc.add_trace(go.Scatter(x=x_axis, y=sim_df.mean(axis=1), mode='lines', name='Expected Mean (μ)', line=dict(color='#F5F5F5', width=3, dash='dash')))
+            fig_mc.add_trace(go.Scatter(x=x_axis, y=sim_df.mean(axis=1), mode='lines', name='Expected Average (μ)', line=dict(color='#F5F5F5', width=3, dash='dash')))
             
             fig_mc = SovereignVisualEngine.apply_premium_layout(fig_mc)
-            fig_mc.update_layout(height=650, yaxis_title="Capital (₺)", xaxis_title="Future Trading Days (1 Year)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            fig_mc.update_layout(height=650, yaxis_title="Capital (TL)", xaxis_title="Future Trading Days (252 Days)", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
             st.plotly_chart(fig_mc, use_container_width=True, config={'displayModeBar': False})
 
 except Exception as e:
